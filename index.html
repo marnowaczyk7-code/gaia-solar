@@ -1782,11 +1782,14 @@ function parsePoText(text){
   if(!d.amount&&d.qty&&d.priceW&&d.power)
     d.amount=parseFloat((d.qty*d.priceW*d.power).toFixed(2));
 
-  // Incoterms & Port
-  if(/\bFCA\b/.test(t))d.incoterms='FCA';
+  // Incoterms — szukaj najpierw przy etykiecie "Trade Term"
+  const incoM=t.match(/(?:Trade\s+Term|Incoterms?)[^A-Z]{0,30}(FCA|CIF|FOB|DAP|DDP|EXW|CPT|CFR)/i);
+  if(incoM)d.incoterms=incoM[1].toUpperCase();
   else if(/\bCIF\b/.test(t))d.incoterms='CIF';
   else if(/\bFOB\b/.test(t))d.incoterms='FOB';
+  else if(/\bFCA\b/.test(t))d.incoterms='FCA';
   else if(/\bDAP\b/.test(t))d.incoterms='DAP';
+  else if(/\bDDP\b/.test(t))d.incoterms='DDP';
   else d.incoterms='';
 
   if(/Rotterdam/i.test(t))d.port='Rotterdam';
