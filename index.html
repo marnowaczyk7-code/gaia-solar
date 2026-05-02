@@ -201,6 +201,14 @@ tbody td:first-child{padding:11px 8px;text-align:center;width:32px}
 .td-model{font-weight:600;font-size:13px;color:var(--ink)}
 .td-desc{font-size:11px;color:var(--ink4);margin-top:3px;font-family:'Inter',sans-serif;font-weight:400}
 .td-num{text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink3)}
+.td-select{
+  border:1.5px solid var(--border);border-radius:6px;padding:3px 6px;
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--ink);
+  background:var(--paper2);outline:none;cursor:pointer;transition:.15s;
+  max-width:100px;
+}
+.td-select:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
+.td-select:hover{border-color:var(--ink4)}
 .td-act{text-align:right;white-space:nowrap;opacity:0;transition:.12s}
 tbody tr.mrow:hover .td-act{opacity:1}
 
@@ -671,6 +679,8 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
           <th onclick="sortBy('nlm')">Nr dokumentu</th>
           <th onclick="sortBy('model')">Moduł</th>
           <th onclick="sortBy('power')" style="text-align:right">Moc</th>
+          <th onclick="sortBy('typ')">Typ</th>
+          <th onclick="sortBy('rama')">Rama</th>
           <th onclick="sortBy('qty')" style="text-align:right">Ilość</th>
           <th onclick="sortBy('_cc')">Kont.</th>
           <th onclick="sortBy('priceW')" style="text-align:right">Cena/Wp €</th>
@@ -1089,7 +1099,7 @@ function renderStats(){
 /* ════ TABLE ════ */
 function renderTable(){
   const rows=getFiltered(),body=document.getElementById('tbl-body');
-  if(!rows.length){body.innerHTML='<tr class="empty-row"><td colspan="13" style="color:var(--text3);padding:60px;text-align:center;font-size:13px">Brak zamówień spełniających kryteria</td></tr>';document.getElementById('tbl-foot').innerHTML='';return;}
+  if(!rows.length){body.innerHTML='<tr class="empty-row"><td colspan="15" style="color:var(--text3);padding:60px;text-align:center;font-size:13px">Brak zamówień spełniających kryteria</td></tr>';document.getElementById('tbl-foot').innerHTML='';return;}
   let html='';
   rows.forEach(o=>{
     syncContainers(o);
@@ -1105,6 +1115,18 @@ function renderTable(){
       <td class="td-nlm">${o.nlm}</td>
       <td><div class="td-model">${o.model}</div><div class="td-desc">${o.desc||''}</div></td>
       <td class="td-num" style="font-weight:600;color:var(--ink4)">${o.power?o.power+'W':'—'}</td>
+      <td><select class="td-select" onchange="setOrderField('${o.id}','typ',this.value)">
+        <option value="">—</option>
+        <option${o.typ==='Bifacial'?' selected':''}>Bifacial</option>
+        <option${o.typ==='DualGlass'?' selected':''}>DualGlass</option>
+        <option${o.typ==='Monoglass'?' selected':''}>Monoglass</option>
+      </select></td>
+      <td><select class="td-select" onchange="setOrderField('${o.id}','rama',this.value)">
+        <option value="">—</option>
+        <option${o.rama==='Czarna'?' selected':''}>Czarna</option>
+        <option${o.rama==='Full Black'?' selected':''}>Full Black</option>
+        <option${o.rama==='Srebrna'?' selected':''}>Srebrna</option>
+      </select></td>
       <td class="td-num" style="font-weight:600">${fmt(o.qty,0)}</td>
       <td>${cCol}</td>
       <td class="td-num">${fmt(o.priceW,3)}</td>
@@ -1114,7 +1136,7 @@ function renderTable(){
       <td>${zCol}</td>
       <td class="td-act"><button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button></td>
     </tr>`;
-    if(isExp)html+=`<tr class="cpanel-row"><td colspan="13"><div class="cpanel">
+    if(isExp)html+=`<tr class="cpanel-row"><td colspan="15"><div class="cpanel">
       <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gold2);border-bottom:1px solid var(--gold3)">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink4);font-family:'Inter',sans-serif">Wartość zamówienia</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold)">${fmt(o.amount,2)} €</span>
@@ -1316,6 +1338,14 @@ function setContDel(oid,idx,f,v){
 }
 
 /* ════ INTERACTIONS ════ */
+function setOrderField(oid, field, value){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  o[field]=value;
+  saveData();
+  renderStats();
+}
+
 function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
 
 function getOrderDeliveryLabel(o){
