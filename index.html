@@ -670,10 +670,10 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
           <th onclick="sortBy('producent')">Producent</th>
           <th onclick="sortBy('nlm')">Nr dokumentu</th>
           <th onclick="sortBy('model')">Moduł</th>
+          <th onclick="sortBy('power')" style="text-align:right">Moc</th>
           <th onclick="sortBy('qty')" style="text-align:right">Ilość</th>
           <th onclick="sortBy('_cc')">Kont.</th>
           <th onclick="sortBy('priceW')" style="text-align:right">Cena/Wp €</th>
-          <th onclick="sortBy('amount')" style="text-align:right">Wartość €</th>
           <th onclick="sortBy('deliveryDate')">CRD</th>
           <th onclick="sortBy('port')">Port</th>
           <th onclick="sortBy('status')">Status</th>
@@ -1104,17 +1104,22 @@ function renderTable(){
       <td class="td-producer">${o.producent||'—'}</td>
       <td class="td-nlm">${o.nlm}</td>
       <td><div class="td-model">${o.model}</div><div class="td-desc">${o.desc||''}</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">${fmt(o.qty,0)}</td>
+      <td class="td-num" style="font-weight:600;color:var(--ink4)">${o.power?o.power+'W':'—'}</td>
+      <td class="td-num" style="font-weight:600">${fmt(o.qty,0)}</td>
       <td>${cCol}</td>
       <td class="td-num">${fmt(o.priceW,3)}</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">${fmt(o.amount,2)}</td>
       <td style="white-space:nowrap">${getOrderDeliveryLabel(o)}<div style="font-size:9px;color:var(--ink4);margin-top:2px;font-family:'Inter',sans-serif">${o.incoterms}</div></td>
       <td><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></td>
       <td>${sCl}</td>
       <td>${zCol}</td>
       <td class="td-act"><button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button></td>
     </tr>`;
-    if(isExp)html+=`<tr class="cpanel-row"><td colspan="13"><div class="cpanel">${contPanel(o)}</div></td></tr>`;
+    if(isExp)html+=`<tr class="cpanel-row"><td colspan="13"><div class="cpanel">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gold2);border-bottom:1px solid var(--gold3)">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink4);font-family:'Inter',sans-serif">Wartość zamówienia</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold)">${fmt(o.amount,2)} €</span>
+      </div>
+      ${contPanel(o)}</div></td></tr>`;
   });
   body.innerHTML=html;
   const tA=rows.reduce((s,o)=>s+o.amount,0),tQ=rows.reduce((s,o)=>s+o.qty,0),tC=rows.reduce((s,o)=>s+getCCount(o),0);
