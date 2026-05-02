@@ -1050,8 +1050,8 @@ function renderTable(){
   rows.forEach(o=>{
     syncContainers(o);
     const n=getCCount(o),isExp=expanded.has(o.id);
-    const xBtn=n>1?`<button class="xbtn${isExp?' open':''}" onclick="toggleExp('${o.id}')"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:`<span class="no-xbtn"></span>`;
-    const cCol=n>1?`<span class="kont-badge" onclick="toggleExp('${o.id}')">${n}</span>`:`<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span>`;
+    const xBtn=`<button class="xbtn${isExp?' open':''}" onclick="toggleExp('${o.id}')"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+    const cCol=n>1?`<span class="kont-badge" onclick="toggleExp('${o.id}')">${n}</span>`:`<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink4)">1</span>`;
     const sCl=n>1?sumBadge(o,`toggleExp('${o.id}')`):stToggle(o.id,0,o.containers[0]?.status||'wolne');
     const zal=o.zaliczka==='tak';
     const zCol=`<div class="ztoggle"><button onclick="setZaliczka('${o.id}','tak')" class="${zal?'atak':''}">TAK</button><button onclick="setZaliczka('${o.id}','nie')" class="${!zal?'anie':''}">NIE</button></div>`;
@@ -1070,7 +1070,7 @@ function renderTable(){
       <td>${zCol}</td>
       <td class="td-act"><button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button></td>
     </tr>`;
-    if(n>1&&isExp)html+=`<tr class="cpanel-row"><td colspan="13"><div class="cpanel">${contPanel(o)}</div></td></tr>`;
+    if(isExp)html+=`<tr class="cpanel-row"><td colspan="13"><div class="cpanel">${contPanel(o)}</div></td></tr>`;
   });
   body.innerHTML=html;
   const tA=rows.reduce((s,o)=>s+o.amount,0),tQ=rows.reduce((s,o)=>s+o.qty,0),tC=rows.reduce((s,o)=>s+getCCount(o),0);
@@ -1115,13 +1115,9 @@ function renderDeliveries(){
 
   let html='';
 
-  // ── STOCK RTD ──
+  // ── STOCK RTD (na początku) ──
   if(stockRTD.length){
     html+=renderStockSection('STOCK_RTD','📦 Stock RTD','ssb-rtd','#3B82F6',stockRTD);
-  }
-  // ── STOCK CHINY ──
-  if(stockChiny.length){
-    html+=renderStockSection('STOCK_CHINY','🚢 Stock Chiny','ssb-chiny','#F97316',stockChiny);
   }
 
   // ── DATED DELIVERIES ──
@@ -1150,6 +1146,11 @@ function renderDeliveries(){
     });
     html+='</div>';
   });
+
+  // ── STOCK CHINY (na końcu) ──
+  if(stockChiny.length){
+    html+=renderStockSection('STOCK_CHINY','🚢 Stock Chiny','ssb-chiny','#F97316',stockChiny);
+  }
 
   el.innerHTML=html;
 }
