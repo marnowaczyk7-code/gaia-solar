@@ -809,7 +809,7 @@ const DEFAULT_ORDERS=[
   {"id":"mohgu3hpszoxznskekq","producent":"Jinko","nlm":"RO/000046/02/2026","date":"2026-02-05","model":"Jinko 590 N-Type Tiger Neo Bifacial Silver Frame","desc":"","power":590,"qty":720,"priceW":0.1021,"amount":43372.08,"deliveryDate":"2026-05-18","incoterms":"FCA","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""}]},
   {"id":"mohgvfpnjv2r2uu3ek","producent":"Jinko","nlm":"RO/000011/04/2026","date":"2026-04-02","model":"Jinko 500 N-type Tiger Neo Bifacial Dual Glass Black Frame","desc":"","power":500,"qty":888,"priceW":0.12,"amount":53280,"deliveryDate":"2026-05-18","incoterms":"FCA","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""}]},
   {"id":"mohiu2v44neak645f2i","producent":"Aiko","nlm":"NLMSC2026002531","date":"2026-04-20","model":"AIKO-AMCE60DB 540","desc":"Full Black, Dual Glass","power":540,"qty":1776,"priceW":0.143,"amount":137142.72,"deliveryDate":"2026-06-11","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
-  {"id":"mohj7kueavi1dj6su1","producent":"Aiko","nlm":"NLMSC2026002531","date":"","model":"AIKO-A510-MAH60Mb","desc":"Full Black, Monoglass","power":510,"qty":3552,"priceW":0.121,"amount":219193.92,"deliveryDate":"","incoterms":"CIF","port":"Gdansk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
+  {"id":"mohj7kueavi1dj6su1","producent":"Aiko","nlm":"NLMSC2026002531","date":"","model":"AIKO-A510-MAH60Mb","desc":"Full Black, Monoglass","power":510,"qty":3552,"priceW":0.121,"amount":219193.92,"deliveryDate":"","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
   {"id":"mohjq6c1u79ptqapjg","producent":"Aiko","nlm":"NLMSC2026002409","date":"","model":"AIKO-A470-MAH54MB 470W","desc":"Full Black, Monoglass","power":470,"qty":2886,"priceW":0.12,"amount":162770.4,"deliveryDate":"2026-05-06","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
   {"id":"mohkscuv24y2s8eqfv","producent":"Aiko","nlm":"NLMSC2026001302","date":"","model":"AIKO-A650-GRH66DW 650W","desc":"Dual Glass, Silver Frame","power":650,"qty":14400,"priceW":0.102,"amount":859248,"deliveryDate":"2026-05-07","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"zarezerwowane","notes":"Cetrans - zapłacone"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Strabag"},{"status":"zarezerwowane","notes":"Strabag"},{"status":"zarezerwowane","notes":"Strabag"},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
 ];
@@ -974,8 +974,8 @@ function getFiltered(){
 /* ════ HELPERS ════ */
 function fmt(n,d=2){return Number(n).toLocaleString('pl-PL',{minimumFractionDigits:d,maximumFractionDigits:d});}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
-function portCls(p){return p==='Rotterdam'?'pr':p==='Gdańsk'?'pg':'po';}
-function portLabel(p){return p==='Rotterdam'?'RTD':p==='Gdańsk'?'GDA':p;}
+function portCls(p){return p==='Rotterdam'?'pr':(p==='Gdańsk'||p==='Gdansk')?'pg':'po';}
+function portLabel(p){return p==='Rotterdam'?'RTD':(p==='Gdańsk'||p==='Gdansk')?'GDA':p;}
 
 function stToggle(oid,idx,status){
   const sw=status==='wolne';
@@ -1064,7 +1064,7 @@ function renderTable(){
       <td>${cCol}</td>
       <td class="td-num">${fmt(o.priceW,3)}</td>
       <td class="td-num" style="font-weight:700;color:var(--blue)">${fmt(o.amount,2)}</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">${o.deliveryDate||'—'}<div style="font-size:9px;color:var(--text3);margin-top:2px">${o.incoterms}</div></td>
+      <td style="white-space:nowrap">${getOrderDeliveryLabel(o)}<div style="font-size:9px;color:var(--ink4);margin-top:2px;font-family:'Inter',sans-serif">${o.incoterms}</div></td>
       <td><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></td>
       <td>${sCl}</td>
       <td>${zCol}</td>
@@ -1266,7 +1266,27 @@ function setContDel(oid,idx,f,v){
 }
 
 /* ════ INTERACTIONS ════ */
-function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
+function getOrderDeliveryLabel(o){
+  syncContainers(o);
+  const dates=o.containers.map(c=>c.deliveryDate||o.deliveryDate||'');
+  const allRTD=dates.every(d=>d==='STOCK_RTD');
+  const allChiny=dates.every(d=>d==='STOCK_CHINY');
+  const anyRTD=dates.some(d=>d==='STOCK_RTD');
+  const anyChiny=dates.some(d=>d==='STOCK_CHINY');
+  const realDates=dates.filter(d=>d&&d!=='STOCK_RTD'&&d!=='STOCK_CHINY');
+  const firstDate=realDates.sort()[0]||'';
+
+  let stockLine='';
+  if(allRTD) stockLine=`<div style="font-size:9px;font-weight:700;color:#1D4ED8;font-family:'Inter',sans-serif;letter-spacing:.03em">📦 Stock RTD</div>`;
+  else if(allChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#C2410C;font-family:'Inter',sans-serif;letter-spacing:.03em">🚢 Stock Chiny</div>`;
+  else if(anyRTD&&anyChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#6B7280;font-family:'Inter',sans-serif">📦+🚢 Mix</div>`;
+  else if(anyRTD) stockLine=`<div style="font-size:9px;font-weight:700;color:#1D4ED8;font-family:'Inter',sans-serif;letter-spacing:.03em">📦 Stock RTD</div>`;
+  else if(anyChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#C2410C;font-family:'Inter',sans-serif;letter-spacing:.03em">🚢 Stock Chiny</div>`;
+
+  const dateLine=firstDate?`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink3)">${firstDate}</div>`:`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink4)">—</div>`;
+
+  return stockLine+dateLine;
+}
 const debT={};
 function setContDebounced(oid,idx,f,v){clearTimeout(debT[oid+idx+f]);debT[oid+idx+f]=setTimeout(()=>setCont(oid,idx,f,v,true),600);}
 function setCont(oid,idx,f,v,silent=false){
