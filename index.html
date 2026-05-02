@@ -1628,15 +1628,13 @@ function unescapePdf(s){
 }
 function parsePoText(text){
   const d={};
-  // Normalizacja: \r → spacja, wielokrotne spacje → jedna
-  const t=text.replace(/\r/g,' ').replace(/[ \t]{2,}/g,' ');
+  // Normalizacja
+  const t=text.replace(/\r/g,'\n').replace(/[ \t]{2,}/g,' ');
 
   // ══ Nr dokumentu ══
   const nlmM=
     t.match(/NLMSC\d+/i)
-    ||t.match(/\bnr\s+([A-Z]{1,6}\/\d{2,10}\/\d{2}\/\d{4})/i)
     ||t.match(/([A-Z]{1,6}\/\d{3,10}\/\d{2}\/\d{4})/i)
-    ||t.match(/Nr\s*faktury[:\s]+([A-Z0-9][A-Z0-9\/\-]{3,30})/i)
     ||t.match(/Invoice\s*(?:No\.?)?[:\s]+([A-Z0-9][A-Z0-9\/\-]{3,30})/i);
   d.nlm=nlmM?(nlmM[1]||nlmM[0]).trim():'—';
 
@@ -1652,82 +1650,78 @@ function parsePoText(text){
   // ══ Daty ══
   const dates=t.match(/\d{4}-\d{2}-\d{2}/g)||[];
   if(dates[0])d.date=dates[0];
-  // CRD — szukaj "termin dostawy/delivery" lub druga data
-  const crdLabelM=t.match(/(?:Termin\s+(?:dostawy|realizacji|płatności)|Delivery\s*date)[:\s]*(\d{4}-\d{2}-\d{2})/i);
-  if(crdLabelM&&crdLabelM[1]!==d.date)d.deliveryDate=crdLabelM[1];
+  const crdM=t.match(/(?:Delivery\s*(?:Date|date)|CRD|Termin\s+dostawy)[:\s]*(\d{4}-\d{2}-\d{2})/i);
+  if(crdM&&crdM[1]!==d.date)d.deliveryDate=crdM[1];
 
-  // ══ DANE Z TABELI PRODUKTÓW ══
-  // Podejście modułowe: szukaj każdej wartości niezależnie
-  // Format kolumn: Nazwa | Ilość | J.m. | Cena | Wartość
-  // Polskie liczby dziesiętne: przecinek ("720,0000" = 720, "60,2390" = 60.239)
+  const parseNum=s=>parseFloat((s||'').replace(/\s/g,'').replace(',','.'));
 
-  const parsePolish=s=>parseFloat((s||'').replace(/\s/g,'').replace(',','.'));
+  // ══ AIKO FORMAT — szukaj etykiet z dokumentu ══
+  const isAiko=/\baiko\b/i.test(t);
 
-  // 1. Ilość: "720,0000 szt" lub "720 szt" lub "PCS 720"
-  const qtyM=
-    t.match(/\b(\d{1,6})[,.]0{3,4}\s*(?:szt\.?|pcs\.?|kpl\.?|m2\.?)/i)  // 720,0000 szt
-    ||t.match(/\b(\d{1,6})\s*(?:szt\.?|pcs\.?|kpl\.?)/i)
-    ||t.match(/PCS\s+([\d,]+)/i);
-  if(qtyM)d.qty=parseInt((qtyM[1]||'').replace(/,/g,''));
+  if(isAiko){
+    // Type of Goods — nazwa modułu
+    const togM=t.match(/Type\s+of\s+Goods[:\s]*([^\n]{5,80})/i);
+    if(togM) d.model=togM[1].trim().replace(/\s+/g,' ');
 
-  // 2. Cena za sztukę: liczba Z 2-4 miejscami po przecinku/kropce, PO jednostce miary
-  const cenaM=
-    t.match(/(?:szt\.?|pcs\.?|kpl\.?)\s+([\d ]{1,8}[,.][\d]{2,4})(?!\d)/i)
-    ||t.match(/(?:Cena|Unit\s*price)[^\d]{0,30}([\d ]{1,8}[,.][\d]{2,4})/i);
-  if(cenaM){
-    const perPcs=parsePolish(cenaM[1]);
-    if(perPcs>=0.05&&perPcs<2)d.priceW=parseFloat(perPcs.toFixed(4));
-    else d._cenaPerPcs=perPcs; // cena za sztukę → przelicz po znalezieniu mocy
-  }
+    // Description of Goods — opis
+    const dogM=t.match(/Description\s+of\s+Goods[:\s]*([^\n]{5,120})/i);
+    if(dogM) d.desc=dogM[1].trim().replace(/\s+/g,' ');
 
-  // 3. Wartość łączna netto: liczba po cenie jednostkowej
-  const wartoscM=
-    t.match(/(?:szt\.?|pcs\.?|kpl\.?)\s+[\d ]+[,.][\d]+\s+([\d ]{1,12}[,.][\d]{2,4})/i)
-    ||t.match(/(?:Netto|Razem|Total)[:\s]*([\d ]{1,12}[,.][\d]{2})\s/i)
-    ||t.match(/TOTAL[^0-9]{0,20}([\d,]+\.\d{2})/i);
-  if(wartoscM){
-    const v=parsePolish(wartoscM[1]);
-    if(v>0)d.amount=parseFloat(v.toFixed(2));
-  }
-
-  // 4. Nazwa produktu: tekst przed wzorcem ilości (lub po "1 " w tabeli)
-  if(!d.model&&qtyM&&qtyM.index!==undefined){
-    // Weź tekst do ~200 znaków PRZED wzorcem ilości
-    const pos=t.indexOf(qtyM[0]);
-    if(pos>0){
-      let before=t.slice(Math.max(0,pos-200),pos).trim();
-      // Usuń nagłówki tabelaryczne (EUR), numer wiersza "1 ", itp.
-      before=before.replace(/.*(?:EUR\)|Amount|Wartość)[^\n]*\n?\s*/is,'');
-      before=before.replace(/^[\s\n]*\d\s+/,'');
-      d.model=before.trim().replace(/\s+/g,' ').slice(-120).trim();
+    // Quantity
+    const qtyM=t.match(/Quantity[:\s]*([\d,.\s]+?)(?:\s*(?:PCS|pcs|szt|pc)\b|\n)/i)
+      ||t.match(/\b([\d,]+)[,.]?0{0,4}\s*(?:PCS|pcs|szt)\b/i);
+    if(qtyM){
+      const raw=(qtyM[1]||'').replace(/[,\s]/g,'').replace(/\.0+$/,'');
+      d.qty=parseInt(raw)||undefined;
     }
-  }
-  // Fallback modelu — Aiko format
-  if(!d.model){
-    const mdlM=t.match(/AIKO-A-[\w]+(?:\s+\w+)?/i);
-    if(mdlM)d.model=mdlM[0].trim().replace(/\s+/g,' ');
+
+    // Unit Price /W — cena za Wp
+    const priceM=t.match(/Unit\s+Price\s*\/W[^:\n]{0,30}[:\s]*([\d,.\s]+)/i)
+      ||t.match(/Unit\s+Price[^:\n]{0,20}\/W[^:\n]{0,10}[:\s]*([\d,.\s]+)/i);
+    if(priceM){
+      const v=parseNum(priceM[1].trim().split(/\s/)[0]);
+      if(v>0&&v<5)d.priceW=parseFloat(v.toFixed(4));
+    }
+
+    // Wartość całkowita
+    const amtM=t.match(/(?:Total\s*Amount|Amount)[^:\n]{0,20}[:\s]*([\d,.\s]{4,})/i)
+      ||t.match(/(?:Razem|Netto|Total)[:\s]*([\d ,]+\.\d{2})/i);
+    if(amtM){
+      const v=parseNum(amtM[1].trim().split(/\s/)[0]);
+      if(v>100)d.amount=parseFloat(v.toFixed(2));
+    }
+
+    // Moc — z opisu lub nazwy
+    const mocSrc=(d.desc||'')+(d.model||'')+' '+t;
+    const mocM=mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})[、,\s]/)||mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*[Ww][pP]?\b/);
+    if(mocM)d.power=parseInt(mocM[1]);
+
+  } else {
+    // ══ INNE FORMATY — ogólne parsowanie ══
+    const qtyM=t.match(/\b(\d{1,6})[,.]0{3,4}\s*(?:szt\.?|pcs\.?)/i)||t.match(/\b(\d{1,6})\s*(?:szt\.?|pcs\.?)/i);
+    if(qtyM)d.qty=parseInt((qtyM[1]||'').replace(/,/g,''));
+
+    const cenaM=t.match(/(?:Unit\s*[Pp]rice)[^\d]{0,30}([\d.,]+)/i);
+    if(cenaM){const v=parseNum(cenaM[1]);if(v>0&&v<5)d.priceW=parseFloat(v.toFixed(4));}
+
+    const mdlM=t.match(/AIKO-[A-Z0-9-]+(?:\s+\w+)?/i)||t.match(/(?:JKM|JAM|CS)\d+[A-Z0-9-]+/i);
+    if(mdlM)d.model=mdlM[0].trim();
+
+    const dscM=t.match(/(\d{3,4}[、，,][^,\n]{0,60}(?:Black|White)[^,\n]{0,30})/i);
+    if(dscM)d.desc=dscM[1].trim();
+
+    const mocSrc=(d.model||'')+' '+t;
+    const mocM=mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*[Ww][pP]?\b/i);
+    if(mocM)d.power=parseInt(mocM[1]);
+
+    // Przelicz cenę/szt → cena/Wp
+    if(!d.priceW&&d._cenaPerPcs&&d.power)
+      d.priceW=parseFloat((d._cenaPerPcs/d.power).toFixed(4));
   }
 
-  // 5. Opis Aiko (480、+、P - Black on White)
-  const dscM=t.match(/(\d{3,4}[、，,][^,\n]{0,60}(?:Black|White)[^,\n]{0,30})/i);
-  if(dscM)d.desc=dscM[1].trim();
-
-  // ══ Moc modułu ══
-  // Szukaj w nazwie lub w całym tekście: "590 N-Type", "480Wp", "480 W"
-  const mocSrc=(d.model||'')+' '+t;
-  const mocM=
-    mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*(?:N-Type|N type|TOPCon|PERC|HJT|Tiger|Bifacial|half.cell)/i)
-    ||mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*[Ww][pP]\b/)
-    ||mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*W\b(?!\s*\/)/i)
-    ||t.match(/Moc[:\s]*([3-9]\d{2}|[1-9]\d{3})\s*[Ww]/i)
-    ||(d.desc&&d.desc.match(/^(\d{3,4})/));
-  if(mocM)d.power=parseInt(mocM[1]||mocM[0]);
-
-  // Przelicz cenę/szt → cena/Wp jeśli mamy moc
-  if(!d.priceW&&d._cenaPerPcs&&d.power){
-    d.priceW=parseFloat((d._cenaPerPcs/d.power).toFixed(4));
-  }
-  delete d._cenaPerPcs;
+  // Oblicz amount jeśli mamy qty, priceW, power
+  if(!d.amount&&d.qty&&d.priceW&&d.power)
+    d.amount=parseFloat((d.qty*d.priceW*d.power).toFixed(2));
 
   // ══ Incoterms & Port ══
   if(/\bFCA\b/.test(t))d.incoterms='FCA';
