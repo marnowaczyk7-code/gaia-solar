@@ -1266,6 +1266,8 @@ function setContDel(oid,idx,f,v){
 }
 
 /* ════ INTERACTIONS ════ */
+function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
+
 function getOrderDeliveryLabel(o){
   syncContainers(o);
   const dates=o.containers.map(c=>c.deliveryDate||o.deliveryDate||'');
