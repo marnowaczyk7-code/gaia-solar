@@ -1471,7 +1471,6 @@ function showPreview(d, rawText){
     {key:'producent',label:'Producent',val:d.producent||''},
     {key:'nlm',label:'Nr dokumentu (NLM / zamówienia / faktury)',val:d.nlm||''},
     {key:'date',label:'Data zamówienia',val:d.date||'',type:'date'},
-    {key:'deliveryDate',label:'Termin dostawy (CRD)',val:d.deliveryDate||'',type:'date'},
     {key:'model',label:'Nazwa modułu',val:d.model||''},
     {key:'desc',label:'Opis',val:d.desc||''},
     {key:'power',label:'Moc (W)',val:d.power||'',type:'number'},
@@ -1481,7 +1480,26 @@ function showPreview(d, rawText){
     {key:'incoterms',label:'Incoterms',val:d.incoterms||'FCA'},
     {key:'port',label:'Port',val:d.port||''},
   ];
-  document.getElementById('ip-fields').innerHTML=fs.map(f=>`<div class="ip-field"><div class="ip-label">${f.label}</div><input class="ip-val" id="ip-${f.key}" type="${f.type||'text'}" value="${String(f.val||'').replace(/"/g,'&quot;')}" step="${f.type==='number'?'any':''}"></div>`).join('');
+
+  // Ukryte pole przechowujące wartość deliveryDate
+  const deliveryVal=d.deliveryDate||'';
+  const isRTD=deliveryVal==='STOCK_RTD', isChiny=deliveryVal==='STOCK_CHINY', isDate=!isRTD&&!isChiny;
+
+  const deliveryPickerHtml=`
+    <div class="ip-field" style="grid-column:1/-1">
+      <div class="ip-label">Termin dostawy (CRD)</div>
+      <input type="hidden" id="ip-deliveryDate" value="${deliveryVal}">
+      <div class="stock-picker" style="margin-top:2px">
+        <button class="spick-btn${isRTD?' active-rtd':''}" id="imp-rtd" onclick="setImportDelivery('STOCK_RTD')">📦 Stock RTD</button>
+        <button class="spick-btn${isChiny?' active-chiny':''}" id="imp-chiny" onclick="setImportDelivery('STOCK_CHINY')">🚢 Stock Chiny</button>
+        <button class="spick-btn${isDate&&deliveryVal?' active-date':''}" id="imp-date-btn" onclick="setImportDelivery('DATE')">📅 Data</button>
+        <input type="date" class="spick-date" id="imp-date-input" value="${isDate?deliveryVal:''}" style="${isDate?'':'display:none'}" onchange="setImportDelivery(this.value)" oninput="setImportDelivery(this.value)">
+      </div>
+    </div>`;
+
+  document.getElementById('ip-fields').innerHTML=
+    fs.map(f=>`<div class="ip-field"><div class="ip-label">${f.label}</div><input class="ip-val" id="ip-${f.key}" type="${f.type||'text'}" value="${String(f.val||'').replace(/"/g,'&quot;')}" step="${f.type==='number'?'any':''}"></div>`).join('')
+    + deliveryPickerHtml;
   // Panel surowego tekstu — pomaga zdiagnozować co parser odczytał
   const debugId='ip-raw-panel';
   let debugHtml='';
@@ -1503,6 +1521,43 @@ function showPreview(d, rawText){
     document.getElementById('import-preview').appendChild(tmp.firstChild);
   }
 }
+function setImportDelivery(val){
+  const hidden=document.getElementById('ip-deliveryDate');
+  const btnRTD=document.getElementById('imp-rtd');
+  const btnChiny=document.getElementById('imp-chiny');
+  const btnDate=document.getElementById('imp-date-btn');
+  const inputDate=document.getElementById('imp-date-input');
+  if(!hidden)return;
+
+  if(val==='STOCK_RTD'){
+    hidden.value='STOCK_RTD';
+    btnRTD.className='spick-btn active-rtd';
+    btnChiny.className='spick-btn';
+    btnDate.className='spick-btn';
+    inputDate.style.display='none';
+  } else if(val==='STOCK_CHINY'){
+    hidden.value='STOCK_CHINY';
+    btnRTD.className='spick-btn';
+    btnChiny.className='spick-btn active-chiny';
+    btnDate.className='spick-btn';
+    inputDate.style.display='none';
+  } else if(val==='DATE'){
+    hidden.value='';
+    btnRTD.className='spick-btn';
+    btnChiny.className='spick-btn';
+    btnDate.className='spick-btn active-date';
+    inputDate.style.display='';
+    inputDate.focus();
+  } else {
+    // konkretna data
+    hidden.value=val;
+    btnRTD.className='spick-btn';
+    btnChiny.className='spick-btn';
+    btnDate.className=val?'spick-btn active-date':'spick-btn';
+    inputDate.style.display='';
+  }
+}
+
 function importConfirm(){
   const g=id=>{const el=document.getElementById('ip-'+id);return el?el.value.trim():''};
   const pw=parseInt(g('power'))||parsePower(g('desc'));
