@@ -1656,51 +1656,53 @@ function parsePoText(text){
   const isAiko=/\baiko\b/i.test(t);
 
   if(isAiko){
-    // AIKO PDF: nagłówki kończą się na "Amount", potem nr wiersza, model, opis (z 、), PCS qty price/W price/pcs date amount
-    const afterAmt=t.replace(/[\s\S]*?\bAmount\b/i,'');
-    const dataBlock=afterAmt.replace(/^\s*\d+\s*/,'');
+    // Szukaj bezpośrednio nazwy modelu AIKO — niezależnie od nagłówków
+    // Model: AIKO-XXXXX\nMw (lub inny sufiks w nowej linii)
+    // Opis: zaczyna się od cyfr + 、(np. "455、 -")
+    // Format: [model lines] [opis do PCS] PCS [qty] [price/W] [price/pcs] [date] [amount]
 
-    // Opis zaczyna się od: cyfry + 、lub cyfry + , + spacja + - (np. "455、 -" lub "480, +")
-    const descIdx=dataBlock.search(/\d{3,4}[、，]\s*[-+]/);
+    // Znajdź AIKO model w tekście
+    const aikoMatch=t.match(/AIKO-[A-Z0-9]+\n\s*([A-Za-z]+)/i)||t.match(/AIKO-[A-Z0-9]+\s+([A-Za-z]+)/i)||t.match(/AIKO-[A-Z0-9]+/i);
+    if(aikoMatch){
+      const aikoStart=t.indexOf(aikoMatch[0]);
+      const fromAiko=t.slice(aikoStart);
 
-    if(descIdx>=0){
-      // Model: tekst przed opisem
-      const modelRaw=dataBlock.slice(0,descIdx);
-      d.model=modelRaw.replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+      // Opis zaczyna się od cyfr + 、
+      const descIdx=fromAiko.search(/\d{3,4}[、，]\s*[-+]/);
 
-      const rest=dataBlock.slice(descIdx);
+      if(descIdx>0){
+        // Model: od AIKO do opisu
+        d.model=fromAiko.slice(0,descIdx).replace(/\n/g,' ').replace(/\s+/g,' ').trim();
 
-      // Opis: do "PCS"
-      const pcsIdx=rest.search(/\bPCS\b/i);
-      if(pcsIdx>0){
-        d.desc=rest.slice(0,pcsIdx).replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+        const rest=fromAiko.slice(descIdx);
 
-        // Po PCS: liczby — qty, price/W, price/pcs, amount
-        const afterPcs=rest.slice(pcsIdx+3).replace(/,/g,'');
-        const nums=(afterPcs.match(/(\d+(?:\.\d+)?)/g)||[]).map(Number).filter(n=>n>0);
+        // Opis: do "PCS"
+        const pcsIdx=rest.search(/\bPCS\b/i);
+        if(pcsIdx>0){
+          d.desc=rest.slice(0,pcsIdx).replace(/\n/g,' ').replace(/\s+/g,' ').trim();
 
-        // qty — pierwsza duża liczba całkowita (>100)
-        const qty=nums.find(n=>Number.isInteger(n)&&n>100);
-        if(qty)d.qty=qty;
+          // Po PCS: qty price/W price/pcs date amount
+          const afterPcs=rest.slice(pcsIdx+3).replace(/,/g,'');
+          const nums=(afterPcs.match(/(\d+(?:\.\d+)?)/g)||[]).map(Number).filter(n=>n>0);
 
-        // price/W — mała liczba (0.05–2)
-        const pw=nums.find(n=>n>=0.05&&n<2&&!Number.isInteger(n));
-        if(pw)d.priceW=parseFloat(pw.toFixed(4));
+          // qty — pierwsza liczba całkowita > 10 i < 100000
+          const qty=nums.find(n=>Number.isInteger(n)&&n>10&&n<100000&&n!==2026&&n!==2025&&n!==2027);
+          if(qty)d.qty=qty;
 
-        // amount — największa liczba
-        const amounts=nums.filter(n=>n>500);
-        if(amounts.length)d.amount=parseFloat(Math.max(...amounts).toFixed(2));
+          // price/W — mała liczba dziesiętna (0.05–2)
+          const pw=nums.find(n=>n>=0.05&&n<2&&!Number.isInteger(n));
+          if(pw)d.priceW=parseFloat(pw.toFixed(4));
+
+          // amount — liczba > qty*price*power (szacunkowo > 1000)
+          const bigNums=nums.filter(n=>n>1000&&n<10000000);
+          if(bigNums.length)d.amount=parseFloat(Math.max(...bigNums).toFixed(2));
+        }
+      } else {
+        // Fallback — brak opisu z 、, weź samo AIKO
+        d.model=aikoMatch[0].replace(/\n/g,' ').trim();
+        const qtyM=t.match(/PCS\s+(\d+)/i);if(qtyM)d.qty=parseInt(qtyM[1]);
+        const pwM=t.match(/\b0\.\d{3,4}\b/);if(pwM)d.priceW=parseFloat(pwM[0]);
       }
-    } else {
-      // Fallback
-      const mdlM=t.match(/AIKO-[A-Z0-9]+(?:\n|\s+)[A-Za-z]+/i)||t.match(/AIKO-[A-Z0-9\s]+/i);
-      if(mdlM)d.model=mdlM[0].replace(/\n/g,' ').trim();
-      const dscM=t.match(/(\d{3,4}[、，][^\n]{5,80})/);
-      if(dscM)d.desc=dscM[1].replace(/\n/g,' ').trim();
-      const qtyM=t.match(/PCS\s+(\d+)/i);
-      if(qtyM)d.qty=parseInt(qtyM[1]);
-      const pwM=t.match(/\b0\.\d{3,4}\b/);
-      if(pwM)d.priceW=parseFloat(pwM[0]);
     }
 
     // Moc z opisu
