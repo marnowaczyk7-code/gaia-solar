@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="pl"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaia Solar — Zarządzanie zamówieniami</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+/* ══════════════════════════════════════════════════
+   RESET & ROOT
+══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* ── GAIA SOLAR BRAND COLORS (Księga Znaku) ── */
+  --gold:#D5A16F;        /* brand primary */
+  --gold2:#F7EDE0;
+  --gold3:#E8C69A;
+  --gold-dk:#A87848;
+  --ink:#050707;         /* brand black */
+  --ink2:#2A2520;
+  --ink3:#6B6560;
+  --ink4:#A8A29C;
+  /* backgrounds */
+  --bg:#F9F8F5;
+  --bg2:#F2EDE5;
+  --paper:#FFFFFF;
+  --paper2:#FAF8F4;
+  /* status colors */
+  --green:#1E6B3E;
+  --green2:#E4F5EC;
+  --amber:#8A5A00;
+  --amber2:#FEF3DA;
+  --red:#B91C1C;
+  --red2:#FEE2E2;
+  --purple:#6D28D9;
+  --purple2:#EDE9FE;
+  /* borders & shadows */
+  --border:#E2D9CE;
+  --border2:#EDE6DB;
+  --shadow-sm:0 1px 2px rgba(5,7,7,.05);
+  --shadow:0 1px 4px rgba(5,7,7,.07),0 4px 14px rgba(5,7,7,.05);
+  --shadow-md:0 4px 18px rgba(5,7,7,.09),0 1px 4px rgba(5,7,7,.05);
+  --shadow-lg:0 14px 48px rgba(5,7,7,.14),0 4px 12px rgba(5,7,7,.06);
+  --r:8px;--r-lg:12px;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}
+
+/* ── SUBTLE BACKGROUND TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 40% at 100% 0%,rgba(213,161,111,.05),transparent),
+    radial-gradient(ellipse 60% 40% at 0% 100%,rgba(213,161,111,.03),transparent);
+}
+#app{position:relative;z-index:1;min-height:100vh}
+
+/* ══════════════════════════════════════════════════
+   HEADER  — deep navy, clean
+══════════════════════════════════════════════════ */
+.hdr{
+  background:#050707;
+  padding:14px 28px;
+  display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:200;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.hdr-logo{
+  width:36px;height:36px;border-radius:9px;
+  background:linear-gradient(135deg,#3B82F6,#D5A16F);
+  display:grid;place-items:center;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(29,78,216,.4);
+}
+.hdr-logo svg{width:20px;height:20px}
+.hdr-brand{display:flex;flex-direction:column;gap:2px;flex:1}
+.hdr-brand h1{font-size:13px;font-weight:700;letter-spacing:.06em;color:#fff;text-transform:uppercase}
+.hdr-brand span{font-family:'Inter',sans-serif;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+.hdr-meta{font-family:'Inter',sans-serif;font-size:10px;color:rgba(255,255,255,.3);text-align:right;line-height:1.7;font-weight:500}
+.hdr-actions{display:flex;gap:8px}
+.hbtn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.65);transition:all .18s;white-space:nowrap;letter-spacing:.02em;
+}
+.hbtn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff}
+.hbtn svg{width:13px;height:13px;flex-shrink:0}
+.hbtn.prime{
+  background:#D5A16F;border-color:#2563EB;color:#fff;
+  box-shadow:0 2px 8px rgba(29,78,216,.35);
+}
+.hbtn.prime:hover{background:#A87848;box-shadow:0 4px 16px rgba(29,78,216,.45)}
+
+/* ══════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════ */
+.tab-nav{
+  display:flex;gap:2px;padding:10px 28px;
+  background:var(--paper);border-bottom:2px solid var(--border);
+  position:sticky;top:65px;z-index:100;
+  box-shadow:var(--shadow-sm);
+}
+.tab-btn{
+  display:flex;align-items:center;gap:7px;padding:8px 18px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+  border:none;background:transparent;color:var(--ink3);transition:all .18s;letter-spacing:.02em;
+}
+.tab-btn:hover{color:var(--ink2);background:var(--bg)}
+.tab-btn svg{width:14px;height:14px;flex-shrink:0}
+.tab-btn.active{background:var(--gold2);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold3)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ══════════════════════════════════════════════════
+   STATS  — white cards, colored top-borders
+══════════════════════════════════════════════════ */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:20px 28px 0}
+.stat{
+  background:var(--paper);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 20px;position:relative;overflow:hidden;
+  box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s;
+}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat:nth-child(1)::after{background:linear-gradient(90deg,#3B82F6,#D5A16F)}
+.stat:nth-child(2)::after{background:linear-gradient(90deg,#6D28D9,#4C1D95)}
+.stat:nth-child(3)::after{background:linear-gradient(90deg,#047857,#065F46)}
+.stat:nth-child(4)::after{background:linear-gradient(90deg,#10B981,#059669)}
+.stat:nth-child(5)::after{background:linear-gradient(90deg,#B45309,#92400E)}
+.stat:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.stat-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;padding-top:4px;font-family:'Inter',sans-serif}
+.stat-value{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600;color:var(--ink);line-height:1}
+.stat-value.blue{color:var(--gold)}
+.stat-value.green{color:var(--green)}
+.stat-sub{font-size:12px;color:var(--ink4);margin-top:6px;font-family:'Inter',sans-serif}
+.stat-dot-row{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.stat-dot-item{display:flex;align-items:center;gap:8px}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot.green{background:var(--green)}
+.sdot.amber{background:var(--amber)}
+.sdot.red{background:var(--red)}
+.sdot.blue{background:var(--gold)}
+.stat-dot-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--ink)}
+.stat-dot-lbl{font-size:12px;color:var(--ink4);font-family:'Inter',sans-serif}
+
+/* ══════════════════════════════════════════════════
+   TOOLBAR
+══════════════════════════════════════════════════ */
+.toolbar{display:flex;align-items:center;gap:8px;padding:14px 28px;flex-wrap:wrap}
+.search{
+  flex:1;min-width:200px;display:flex;align-items:center;gap:10px;
+  background:var(--paper);border:1.5px solid var(--border);border-radius:9px;
+  padding:8px 14px;box-shadow:var(--shadow-sm);transition:.18s;
+}
+.search:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+.search input{flex:1;border:none;outline:none;font-family:'Inter',sans-serif;font-size:13px;background:transparent;color:var(--ink)}
+.search input::placeholder{color:var(--ink4)}
+.fbtn{
+  padding:7px 13px;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;
+  cursor:pointer;border:1.5px solid var(--border);background:var(--paper);color:var(--ink3);
+  transition:all .15s;letter-spacing:.02em;white-space:nowrap;box-shadow:var(--shadow-sm);
+}
+.fbtn.active{border-color:var(--gold);color:var(--gold-dk);background:var(--gold2)}
+.fbtn.fw.active{border-color:var(--green);color:var(--green);background:var(--green2)}
+.fbtn.fz.active{border-color:var(--amber);color:var(--amber);background:var(--amber2)}
+.fbtn:hover:not(.active){border-color:var(--ink4);color:var(--ink2);background:var(--paper2)}
+.btn-add{
+  background:var(--gold);color:var(--ink);border:none;
+  padding:8px 16px;border-radius:9px;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  white-space:nowrap;transition:all .18s;letter-spacing:.02em;
+  box-shadow:0 2px 8px rgba(29,78,216,.3);
+}
+.btn-add:hover{background:var(--gold3);box-shadow:0 4px 14px rgba(213,161,111,.35)}
+
+/* ══════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════ */
+.tbl-wrap{
+  margin:0 28px 28px;background:var(--paper);
+  border:1px solid var(--border);border-radius:var(--r-lg);
+  overflow:auto;box-shadow:var(--shadow-md);
+}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  padding:11px 13px;text-align:left;
+  font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink4);background:var(--paper2);border-bottom:2px solid var(--border);
+  white-space:nowrap;cursor:pointer;user-select:none;transition:.15s;font-family:'Inter',sans-serif;
+}
+thead th:hover{color:var(--gold)}
+thead th:first-child,thead th:nth-child(2){cursor:default}
+thead th:first-child{width:32px;padding:11px 8px;text-align:center}
+tbody tr.mrow{border-bottom:1px solid var(--border2);transition:background .12s}
+tbody tr.mrow.expanded{border-bottom:none}
+tbody tr.mrow:hover{background:#FAFAF9}
+tbody td{padding:11px 13px;vertical-align:middle}
+tbody td:first-child{padding:11px 8px;text-align:center;width:32px}
+.td-nlm{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink4);letter-spacing:.02em}
+.td-producer{font-weight:700;font-size:13px;color:var(--ink)}
+.td-model{font-weight:600;font-size:13px;color:var(--ink)}
+.td-desc{font-size:11px;color:var(--ink4);margin-top:3px;font-family:'Inter',sans-serif;font-weight:400}
+.td-num{text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink3)}
+.td-act{text-align:right;white-space:nowrap;opacity:0;transition:.12s}
+tbody tr.mrow:hover .td-act{opacity:1}
+
+/* ── EXPAND BUTTON ── */
+.xbtn{
+  width:22px;height:22px;border-radius:5px;border:1.5px solid var(--border);
+  background:var(--paper2);cursor:pointer;display:inline-grid;place-items:center;
+  transition:all .15s;color:var(--ink4);
+}
+.xbtn:hover{border-color:var(--gold);background:var(--gold2);color:var(--gold)}
+.xbtn svg{transition:transform .2s}
+.xbtn.open svg{transform:rotate(90deg)}
+.no-xbtn{width:22px;height:22px;display:inline-block}
+
+/* ══════════════════════════════════════════════════
+   CONTAINER PANEL
+══════════════════════════════════════════════════ */
+tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
+.cpanel{background:var(--paper2);border-top:1px solid var(--border);border-left:3px solid var(--gold)}
+.cpanel-hdr{
+  padding:8px 16px 6px;font-size:9px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink4);
+  display:grid;grid-template-columns:130px 65px 140px 200px 1fr;gap:10px;align-items:center;
+  border-bottom:1px solid var(--border2);
+}
+.cont-row{
+  display:grid;grid-template-columns:130px 65px 140px 200px 1fr;gap:10px;
+  align-items:center;padding:8px 16px;border-bottom:1px solid var(--border2);transition:background .12s;
+}
+.cont-date{border:1.5px solid var(--border);border-radius:7px;padding:4px 7px;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);background:var(--paper);outline:none;width:100%;transition:.15s;}
+.cont-date:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+
+/* ── STOCK PICKER ── */
+.stock-picker{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.spick-btn{
+  padding:3px 9px;border-radius:6px;border:1.5px solid var(--border);
+  font-family:'Inter',sans-serif;font-size:10px;font-weight:700;cursor:pointer;
+  background:var(--paper2);color:var(--ink4);transition:all .15s;white-space:nowrap;
+}
+.spick-btn:hover{border-color:var(--ink4);color:var(--ink2)}
+.spick-btn.active-rtd{background:#EFF6FF;border-color:#3B82F6;color:#1D4ED8}
+.spick-btn.active-chiny{background:#FFF7ED;border-color:#F97316;color:#C2410C}
+.spick-btn.active-date{background:var(--gold2);border-color:var(--gold);color:var(--gold-dk)}
+.spick-date{
+  border:1.5px solid var(--gold);border-radius:7px;padding:3px 7px;
+  font-family:'Inter',sans-serif;font-size:11px;color:var(--ink);
+  background:var(--paper);outline:none;transition:.15s;
+}
+.spick-date:focus{box-shadow:0 0 0 3px var(--gold2)}
+
+/* ── STOCK SECTION BADGES ── */
+.stock-section-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:8px;font-size:11px;font-weight:700;
+  font-family:'Inter',sans-serif;letter-spacing:.03em;
+}
+.ssb-rtd{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1D4ED8}
+.ssb-chiny{background:#FFF7ED;border:1.5px solid #FED7AA;color:#C2410C}
+.cont-del-badge{
+  display:inline-flex;padding:2px 8px;border-radius:5px;
+  font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;
+}
+.cdb-rtd{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.cdb-chiny{background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA}
+.cont-row:last-child{border-bottom:none}
+.cont-row:hover{background:rgba(255,255,255,.7)}
+.cont-num{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--ink2)}
+.cbadge{
+  width:22px;height:22px;border-radius:5px;background:var(--gold2);
+  border:1px solid var(--gold3);color:var(--gold);font-size:9px;font-weight:700;
+  display:grid;place-items:center;font-family:'JetBrains Mono',monospace;flex-shrink:0;
+}
+.cbadge.part{background:var(--paper2);border-color:var(--border);color:var(--ink4)}
+.cont-qty-cell{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink4);text-align:right}
+.cont-notes{
+  border:1.5px solid var(--border);border-radius:7px;padding:5px 10px;
+  font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);
+  background:var(--paper);outline:none;width:100%;transition:.15s;
+}
+.cont-notes:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+.cont-notes::placeholder{color:var(--ink4)}
+
+/* ══════════════════════════════════════════════════
+   BADGES & TOGGLES
+══════════════════════════════════════════════════ */
+.stoggle{display:inline-flex;border-radius:7px;overflow:hidden;border:1.5px solid var(--border);background:var(--paper2);gap:2px;padding:2px;}
+.stoggle button{
+  width:26px;height:22px;border:none;cursor:pointer;border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  background:transparent;color:var(--border);transition:all .15s;
+}
+.stoggle button.aw{background:var(--green);color:#fff;box-shadow:0 1px 4px rgba(30,107,62,.3)}
+.stoggle button.az{background:var(--red);color:#fff;box-shadow:0 1px 4px rgba(185,28,28,.3)}
+.stoggle button:not(.aw):not(.az){color:var(--ink4);opacity:.45}
+.stoggle button:hover:not(.aw):not(.az){background:var(--bg2);color:var(--ink2);opacity:1}
+
+.ztoggle{display:inline-flex;border-radius:99px;overflow:hidden;border:1.5px solid var(--border);background:var(--paper2)}
+.ztoggle button{
+  padding:3px 10px;border:none;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:10px;font-weight:700;
+  background:transparent;color:var(--ink4);transition:.15s;white-space:nowrap;
+}
+.ztoggle button.atak{background:var(--green2);color:var(--green)}
+.ztoggle button.anie{background:var(--red2);color:var(--red)}
+.ztoggle button:hover:not(.atak):not(.anie){color:var(--ink2);background:var(--bg2)}
+
+.port-badge{
+  display:inline-flex;align-items:center;padding:3px 8px;
+  border-radius:5px;font-size:10px;font-weight:800;letter-spacing:.08em;
+  font-family:'JetBrains Mono',monospace;
+}
+.pr{background:var(--gold);color:#fff;box-shadow:0 1px 4px rgba(168,120,72,.35)}
+.pg{background:var(--green);color:#fff;box-shadow:0 1px 4px rgba(30,107,62,.3)}
+.po{background:var(--paper2);color:var(--ink3);border:1px solid var(--border)}
+
+.kont-badge{
+  display:inline-flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:11px;
+  color:var(--ink4);background:var(--paper2);border:1.5px solid var(--border);
+  border-radius:6px;padding:2px 10px;cursor:pointer;transition:all .15s;font-weight:600;
+}
+.kont-badge:hover{border-color:var(--gold);color:var(--gold-dk);background:var(--gold2)}
+
+.cs-sum{
+  display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:99px;cursor:pointer;border:1px solid transparent;transition:all .15s;
+}
+.cs-mixed{background:var(--paper2);color:var(--ink3);border-color:var(--border)}
+.cs-wolne{background:var(--green2);color:var(--green);border-color:#A7F3D0}
+.cs-zar{background:var(--amber2);color:var(--amber);border-color:#FDE68A}
+.cs-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+.ibtn{
+  width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--paper2);
+  cursor:pointer;display:inline-grid;place-items:center;transition:all .15s;margin-left:3px;color:var(--ink4);
+}
+.ibtn:hover{border-color:var(--gold);background:var(--gold2);color:var(--gold)}
+.ibtn.del:hover{border-color:var(--red);background:var(--red2);color:var(--red)}
+.empty-row td{text-align:center;padding:60px;color:var(--ink4);font-size:13px}
+
+/* ── TABLE FOOTER ── */
+.tbl-foot{
+  padding:12px 14px;background:var(--paper2);border-top:2px solid var(--border);
+  display:flex;gap:32px;align-items:center;
+}
+.tf-item{display:flex;flex-direction:column;gap:1px}
+.tf-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4)}
+.tf-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink2)}
+
+/* ══════════════════════════════════════════════════
+   DELIVERIES TAB
+══════════════════════════════════════════════════ */
+.del-wrap{padding:20px 28px 32px}
+.del-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.month-section{margin-bottom:32px}
+.month-hdr{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.month-title{
+  font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--ink);white-space:nowrap;
+}
+.month-divider{flex:1;height:2px;background:var(--border);border-radius:99px}
+.month-stats{display:flex;gap:8px;flex-wrap:wrap}
+.ms-pill{
+  padding:4px 11px;border-radius:7px;font-size:11px;font-weight:600;
+  display:flex;align-items:center;gap:5px;letter-spacing:.02em;
+}
+.ms-total{background:var(--paper);color:var(--ink3);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.ms-green{background:var(--green2);color:var(--green);border:1px solid #A7F3D0}
+.ms-amber{background:var(--amber2);color:var(--amber);border:1px solid #FDE68A}
+.ms-value{background:var(--gold2);color:var(--gold);border:1px solid var(--gold3)}
+
+.date-group{margin-bottom:16px}
+.date-label{
+  font-size:12px;font-weight:700;letter-spacing:.03em;
+  color:var(--ink2);padding:8px 14px 10px;display:flex;align-items:center;gap:10px;
+  background:linear-gradient(90deg,var(--bg2),transparent);border-radius:6px;margin-bottom:8px;
+}
+.date-label-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;box-shadow:0 0 0 3px var(--gold2)}
+.dc-cont-label{
+  display:inline-flex;align-items:center;font-family:'Inter',sans-serif;font-size:11px;
+  font-weight:600;color:var(--ink3);background:var(--paper2);border:1.5px solid var(--border);
+  border-radius:6px;padding:3px 10px;
+}
+
+.del-card{
+  background:var(--paper);border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:6px;overflow:hidden;box-shadow:var(--shadow-sm);
+  transition:all .18s;border-left:3px solid var(--border);
+}
+.del-card.port-rtd{border-left-color:var(--gold)}
+.del-card.port-gda{border-left-color:var(--green)}
+.del-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.del-card.exp{box-shadow:0 0 0 2px var(--gold2),var(--shadow);border-color:var(--gold);border-left-color:var(--gold)}
+.del-card-main{
+  display:grid;grid-template-columns:200px 1fr 80px 90px 110px 60px 100px 28px;gap:10px;
+  align-items:center;padding:11px 16px;cursor:pointer;transition:background .15s;
+}
+.del-card-main:hover{background:var(--paper2)}
+.del-card.exp .del-card-main{background:var(--gold2)}
+.dc-nlm{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink4);letter-spacing:.02em}
+.dc-prod{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:2px;letter-spacing:.01em;font-family:'Inter',sans-serif}
+.dc-model{font-weight:600;font-size:13px;color:var(--ink);font-family:'Inter',sans-serif}
+.dc-desc{font-size:11px;color:var(--ink4);font-family:'Inter',sans-serif;font-weight:400}
+.dc-num{font-family:'JetBrains Mono',monospace;font-size:12px;text-align:right;color:var(--ink3)}
+.zaliczka-tag{font-size:9px;color:var(--green);font-weight:700;font-family:'Inter',sans-serif;letter-spacing:.04em}
+.dc-arrow{color:var(--ink4);display:grid;place-items:center;transition:transform .2s}
+.del-card.exp .dc-arrow{transform:rotate(90deg);color:var(--gold)}
+.del-panel{display:none}
+.del-card.exp .del-panel{display:block}
+.del-panel .cpanel{border-radius:0}
+
+/* ══════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════ */
+.ovl{
+  position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:.2s;
+  background:rgba(28,25,23,.5);backdrop-filter:blur(6px);
+}
+.ovl.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--paper);border:1px solid var(--border);border-radius:var(--r-lg);
+  width:620px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);transform:translateY(16px) scale(.99);transition:.2s;
+}
+.modal.wide{width:760px}
+.ovl.open .modal{transform:none}
+.mhdr{
+  padding:20px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(90deg,rgba(213,161,111,.08),transparent);
+}
+.mhdr h2{font-size:16px;font-weight:700;flex:1;letter-spacing:-.02em;color:var(--ink)}
+.mcls{
+  width:28px;height:28px;border:1.5px solid var(--border);border-radius:7px;
+  background:var(--paper2);cursor:pointer;display:grid;place-items:center;
+  font-size:14px;color:var(--ink4);transition:.15s;
+}
+.mcls:hover{background:var(--red2);border-color:var(--red);color:var(--red)}
+.mbody{padding:20px 24px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ffull{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4)}
+.fg input,.fg select{
+  border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;
+  font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);
+  background:var(--paper);outline:none;transition:.15s;width:100%;
+}
+.fg input:focus,.fg select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+.fg input.mn{font-family:'JetBrains Mono',monospace;font-size:12px}
+.power-hint{font-size:11px;color:var(--gold);margin-top:3px;font-weight:600;min-height:16px;font-family:'JetBrains Mono',monospace}
+.spicker{display:flex;gap:8px}
+.sopt{
+  flex:1;padding:10px;border:1.5px solid var(--border);border-radius:9px;
+  cursor:pointer;text-align:center;font-size:12px;font-weight:600;
+  transition:.15s;background:var(--paper);color:var(--ink4);
+}
+.sopt:hover:not(.sw):not(.sz):not(.stak):not(.snie){border-color:var(--ink4);color:var(--ink2);background:var(--paper2)}
+.sopt.sw{border-color:var(--green);background:var(--green2);color:var(--green)}
+.sopt.sz{border-color:var(--amber);background:var(--amber2);color:var(--amber)}
+.sopt.stak{border-color:var(--green);background:var(--green2);color:var(--green)}
+.sopt.snie{border-color:var(--red);background:var(--red2);color:var(--red)}
+.mftr{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.bcancel{
+  background:var(--paper2);color:var(--ink3);border:1.5px solid var(--border);
+  padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:.15s;
+}
+.bcancel:hover{background:var(--bg2);color:var(--ink)}
+.bsave{
+  background:var(--ink);color:#fff;border:none;padding:8px 20px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.18s;
+  box-shadow:0 2px 8px rgba(29,78,216,.3);letter-spacing:.02em;
+}
+.bsave:hover{background:var(--ink2);box-shadow:0 4px 16px rgba(5,7,7,.2)}
+.bimport{
+  background:var(--purple2);color:var(--purple);border:1.5px solid #C4B5FD;
+  padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:.18s;display:flex;align-items:center;gap:6px;
+}
+.bimport:hover{background:#DDD6FE;box-shadow:0 4px 12px rgba(109,40,217,.15)}
+
+/* ── PDF IMPORT ── */
+.import-tabs{display:flex;gap:6px;margin-bottom:14px}
+.itab{padding:7px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--paper2);color:var(--ink3);transition:.15s}
+.itab.active{border-color:var(--gold);color:var(--gold-dk);background:var(--gold2)}
+.itab:hover:not(.active){color:var(--ink2);background:var(--paper)}
+.paste-hint{font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.6;padding:10px 12px;background:var(--gold2);border-radius:8px;border:1px solid var(--gold3)}
+.paste-hint strong{color:var(--gold)}
+.paste-area{width:100%;height:150px;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);background:var(--paper);outline:none;resize:vertical;line-height:1.6;transition:.15s}
+.paste-area:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+.parse-btn{width:100%;margin-top:8px;padding:9px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.parse-btn:hover{background:#A87848}
+.import-zone{
+  border:2px dashed var(--border);border-radius:12px;padding:36px;text-align:center;
+  cursor:pointer;transition:all .2s;background:var(--paper2);
+}
+.import-zone:hover,.import-zone.drag{border-color:var(--gold);background:var(--gold2);box-shadow:0 0 0 3px var(--gold2)}
+.import-zone .iz-icon{font-size:36px;margin-bottom:12px;opacity:.7}
+.import-zone p{font-size:13px;color:var(--ink2);margin-bottom:4px;font-weight:500}
+.import-zone small{font-size:11px;color:var(--ink4)}
+.import-preview{background:var(--paper2);border-radius:10px;padding:16px;margin-top:16px;border:1px solid var(--border)}
+.import-preview h4{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;color:var(--ink4)}
+.ip-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ip-field{display:flex;flex-direction:column;gap:4px}
+.ip-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink4)}
+.ip-val{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--ink);background:var(--paper);border:1.5px solid var(--border);border-radius:7px;padding:6px 10px;outline:none;width:100%;transition:.15s}
+.ip-val:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+.import-status{padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;margin-top:12px;display:none}
+.is-loading{background:var(--gold2);color:var(--gold);border:1px solid var(--gold3);display:flex;align-items:center;gap:8px}
+.is-error{background:var(--red2);color:var(--red);border:1px solid #FECACA}
+.is-ok{background:var(--green2);color:var(--green);border:1px solid #A7F3D0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════
+   CONFIRM
+══════════════════════════════════════════════════ */
+.covl{position:fixed;inset:0;z-index:350;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.2s;background:rgba(28,25,23,.5);backdrop-filter:blur(6px)}
+.covl.open{opacity:1;pointer-events:all}
+.cbox{
+  background:var(--paper);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:26px;width:360px;box-shadow:var(--shadow-lg);
+}
+.cbox h3{font-size:15px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.cbox p{font-size:12px;color:var(--ink4);margin-bottom:22px;line-height:1.7}
+.cact{display:flex;justify-content:flex-end;gap:8px}
+.bdel{
+  background:var(--red2);color:var(--red);border:1.5px solid #FECACA;padding:8px 16px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;
+  box-shadow:0 2px 8px rgba(185,28,28,.3);
+}
+.bdel:hover{background:#991B1B;box-shadow:0 4px 12px rgba(185,28,28,.4)}
+
+/* ══════════════════════════════════════════════════
+   SYNC STATUS
+══════════════════════════════════════════════════ */
+.sync-dot{
+  width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);
+  flex-shrink:0;transition:background .3s;
+}
+.sync-dot.syncing{background:#F59E0B;box-shadow:0 0 0 3px rgba(245,158,11,.25);animation:syncpulse .8s infinite}
+.sync-dot.ok{background:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+.sync-dot.err{background:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.2)}
+.sync-label{font-family:'Inter',sans-serif;font-size:10px;font-weight:500;color:rgba(255,255,255,.4);white-space:nowrap}
+@keyframes syncpulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ══════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--ink);color:#fff;
+  padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;
+  z-index:400;opacity:0;transform:translateY(10px);transition:.22s;pointer-events:none;
+  box-shadow:var(--shadow-lg);letter-spacing:.01em;
+}
+.toast.show{opacity:1;transform:none}
+
+/* ══════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.stat{animation:fadeUp .35s ease both}
+.stat:nth-child(1){animation-delay:.04s}
+.stat:nth-child(2){animation-delay:.08s}
+.stat:nth-child(3){animation-delay:.12s}
+.stat:nth-child(4){animation-delay:.16s}
+.stat:nth-child(5){animation-delay:.20s}
+
+@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.stats{grid-template-columns:1fr 1fr};.del-card-main{grid-template-columns:1fr auto}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════ HEADER ═══════ -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <!-- GAIA logo mark — G+S symbol, brand gold #D5A16F -->
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Upper arc: G shape -->
+      <path d="M18 3C10.3 3 4 9.3 4 17C4 20.2 5.1 23.2 7 25.5L18 25.5L18 19.5L13 19.5" stroke="#D5A16F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+      <!-- Lower arc: S shape (mirrored) -->
+      <path d="M18 33C25.7 33 32 26.7 32 19C32 15.8 30.9 12.8 29 10.5L18 10.5L18 16.5L23 16.5" stroke="#D5A16F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+    </svg>
+  </div>
+  <div class="hdr-brand">
+    <h1>GAIA SOLAR</h1>
+    <span>ZARZĄDZANIE ZAMÓWIENIAMI</span>
+  </div>
+  <div class="hdr-meta" id="hdr-date">poniedziałek, 27 kwietnia 2026<br>18:52</div>
+  <div style="display:flex;align-items:center;gap:7px;padding:0 4px">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span class="sync-label" id="sync-label">łączenie…</span>
+  </div>
+  <div id="mode-badge" style="display:none;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.06em;font-family:'Inter',sans-serif"></div>
+  <div class="hdr-actions" id="hdr-actions">
+    <button class="hbtn" onclick="loadOrders()" title="Pobierz aktualne dane z serwera">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M13.5 8A5.5 5.5 0 112.5 5M2.5 2v3h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Odśwież
+    </button>
+    <button class="hbtn" onclick="openImport()">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4M2 12v2h12v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Importuj PDF
+    </button>
+    <button class="hbtn prime" onclick="openModal()">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+      Nowe zamówienie
+    </button>
+  </div>
+</div>
+
+<!-- ═══════ TABS ═══════ -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="orders" onclick="switchTab(this)">
+    <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3"></rect><path d="M4 5h8M4 8h5M4 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>
+    Zamówienia
+  </button>
+  <button class="tab-btn" data-tab="deliveries" onclick="switchTab(this)">
+    <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"></rect><path d="M5 1v3M11 1v3M1 7h14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>
+    Harmonogram dostaw
+  </button>
+</nav>
+
+<!-- ═══════ STATS ═══════ -->
+<div class="stats" id="stats">
+    <div class="stat"><div class="stat-label">Zamówień</div><div class="stat-value blue">9</div><div class="stat-sub">13 kontenerów łącznie</div></div>
+    <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">9696</div><div class="stat-sub">sztuk · 9 PO</div></div>
+    <div class="stat"><div class="stat-label">Wartość łącznie</div><div class="stat-value green">576,00k</div><div class="stat-sub">EUR bez VAT</div></div>
+    <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">13</span><span class="stat-dot-lbl">wolnych</span></div><div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">0</span><span class="stat-dot-lbl">zarezerwowanych</span></div></div></div>
+    <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">0</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">9</span><span class="stat-dot-lbl">oczekujące</span></div></div></div></div>
+
+<!-- ═══════ TAB: ZAMÓWIENIA ═══════ -->
+<div id="tab-orders" class="tab-content active">
+  <div class="toolbar">
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#475569" stroke-width="1.5"></circle><path d="M11 11l3 3" stroke="#475569" stroke-width="1.5" stroke-linecap="round"></path></svg>
+      <input type="text" id="search-input" placeholder="Szukaj po NLM, modelu, producencie, porcie…" oninput="renderTable()">
+    </div>
+    <button class="fbtn active" data-f="" data-ft="port" onclick="setFilter(this)">Wszystkie</button>
+    <button class="fbtn" data-f="Rotterdam" data-ft="port" onclick="setFilter(this)">Rotterdam</button>
+    <button class="fbtn" data-f="Gdańsk" data-ft="port" onclick="setFilter(this)">Gdańsk</button>
+    <button class="fbtn fw" data-f="wolne" data-ft="status" onclick="setFilter(this)">Wolne</button>
+    <button class="fbtn fz" data-f="zarezerwowane" data-ft="status" onclick="setFilter(this)">Zarezerwowane</button>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th onclick="sortBy('producent')">Producent</th>
+          <th onclick="sortBy('nlm')">Nr dokumentu</th>
+          <th onclick="sortBy('model')">Moduł</th>
+          <th onclick="sortBy('qty')" style="text-align:right">Ilość</th>
+          <th onclick="sortBy('_cc')">Kont.</th>
+          <th onclick="sortBy('priceW')" style="text-align:right">Cena/Wp €</th>
+          <th onclick="sortBy('amount')" style="text-align:right">Wartość €</th>
+          <th onclick="sortBy('deliveryDate')">CRD</th>
+          <th onclick="sortBy('port')">Port</th>
+          <th onclick="sortBy('status')">Status</th>
+          <th onclick="sortBy('zaliczka')">Zaliczka</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+    <div class="tbl-foot" id="tbl-foot"></div>
+  </div>
+</div>
+
+<!-- ═══════ TAB: DOSTAWY ═══════ -->
+<div id="tab-deliveries" class="tab-content">
+  <div class="del-wrap">
+    <div class="del-toolbar">
+      <button class="fbtn active" data-f="" data-ft="dport" onclick="setDelFilter(this)">Wszystkie porty</button>
+      <button class="fbtn" data-f="Rotterdam" data-ft="dport" onclick="setDelFilter(this)">Rotterdam</button>
+      <button class="fbtn" data-f="Gdańsk" data-ft="dport" onclick="setDelFilter(this)">Gdańsk</button>
+      <div style="flex:1"></div>
+      <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">← kliknij kartę aby zobaczyć kontenery</span>
+    </div>
+    <div id="del-content"></div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: ADD / EDIT ═══════ -->
+<div class="ovl" id="modal-ovl" onclick="ovlClick(event,'modal-ovl')">
+  <div class="modal">
+    <div class="mhdr"><h2 id="modal-title">Nowe zamówienie</h2><button class="mcls" onclick="closeModal()">✕</button></div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="fg"><label>Producent</label><input id="f-producent" placeholder="np. Aiko, JA Solar, Longi…"></div>
+        <div class="fg"><label>Nr dokumentu (NLM / zamówienia / faktury)</label><input class="mn" id="f-nlm" placeholder="np. NLMSC2026003440"></div>
+        <div class="fg"><label>Data zamówienia</label><input type="date" id="f-date"></div>
+        <div class="fg"><label>Termin dostawy (CRD)</label><input type="date" id="f-deliveryDate"></div>
+        <div class="fg ffull"><label>Nazwa modułu (Type of Goods)</label><input id="f-model" placeholder="np. AIKO-A-MCE54D w"></div>
+        <div class="fg ffull"><label>Opis (Description of Goods)</label><input id="f-desc" placeholder="np. 480、+、P - Black on White、1200" oninput="updateHint()"></div>
+        <div class="fg">
+          <label>Moc modułu (W)</label>
+          <input type="number" id="f-power" placeholder="np. 480" oninput="updateHint();calcAmt()">
+          <div class="power-hint" id="power-hint"></div>
+        </div>
+        <div class="fg"><label>Ilość (szt.)</label><input type="number" id="f-qty" placeholder="0" oninput="updateHint();calcAmt()"></div>
+        <div class="fg"><label>Cena / Wp (EUR)</label><input type="number" step="0.001" id="f-priceW" placeholder="0.000" oninput="calcAmt()"></div>
+        <div class="fg"><label>Wartość (EUR)</label><input type="number" step="0.01" id="f-amount" placeholder="0.00"></div>
+        <div class="fg"><label>Incoterms</label><select id="f-incoterms"><option selected="selected">FCA</option><option>CIF</option><option>FOB</option><option>DAP</option><option>DDP</option></select></div>
+        <div class="fg"><label>Port docelowy</label><input id="f-port" placeholder="np. Rotterdam" list="pl"><datalist id="pl"><option value="Rotterdam"></option><option value="Gdańsk"></option><option value="Hamburg"></option><option value="Antwerpen"></option></datalist></div>
+        <div class="fg">
+          <label>Status kontenerów</label>
+          <div class="spicker">
+            <div class="sopt" id="sopt-w" onclick="selStatus('wolne')">🟢 Wolne</div>
+            <div class="sopt" id="sopt-z" onclick="selStatus('zarezerwowane')">🟡 Zarezerwowane</div>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Zaliczka opłacona</label>
+          <div class="spicker">
+            <div class="sopt" id="sopt-tak" onclick="selZaliczka('tak')">✅ TAK</div>
+            <div class="sopt" id="sopt-nie" onclick="selZaliczka('nie')">❌ NIE</div>
+          </div>
+        </div>
+        <div class="fg ffull"><label>Notatki ogólne</label><input id="f-notes" placeholder="Dodatkowe informacje…"></div>
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="bcancel" onclick="closeModal()">Anuluj</button>
+      <button class="bsave" onclick="saveOrder()">Zapisz zamówienie</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: PDF IMPORT ═══════ -->
+<div class="ovl" id="import-ovl" onclick="ovlClick(event,'import-ovl')">
+  <div class="modal wide">
+    <div class="mhdr"><h2>Importuj zamówienie</h2><button class="mcls" onclick="closeImport()">✕</button></div>
+    <div class="mbody">
+      <div class="import-tabs">
+        <button class="itab active" id="itab-pdf" onclick="switchImportTab('pdf')">📄 Plik PDF</button>
+        <button class="itab" id="itab-text" onclick="switchImportTab('text')">📋 Wklej tekst</button>
+      </div>
+      <div id="import-tab-pdf">
+        <div class="import-zone" id="import-zone" onclick="document.getElementById('pdf-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="handleFile(this.files[0])">
+          <div class="iz-icon">📄</div>
+          <p><strong>Kliknij lub przeciągnij plik PDF</strong></p>
+          <small>Obsługiwane: Purchase Order od Aiko i innych dostawców</small>
+        </div>
+      </div>
+      <div id="import-tab-text" style="display:none">
+        <div class="paste-hint">
+          <strong>Jak to zrobić:</strong> Otwórz PDF w przeglądarce lub programie (np. Adobe, Edge, Chrome) → zaznacz wszystko <strong>Ctrl+A</strong> → skopiuj <strong>Ctrl+C</strong> → wklej poniżej <strong>Ctrl+V</strong>
+        </div>
+        <textarea class="paste-area" id="paste-text" placeholder="Wklej tutaj tekst skopiowany z dokumentu PDF..."></textarea>
+        <button class="parse-btn" onclick="parseFromText()">Wyodrębnij dane z tekstu</button>
+      </div>
+      <div class="import-status" id="import-status"></div>
+      <div id="import-preview" style="display:none">
+        <div class="import-preview">
+          <h4>Dane wyodrębnione — sprawdź i popraw jeśli potrzeba</h4>
+          <div class="ip-grid" id="ip-fields"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+          <button class="bcancel" onclick="resetImport()">Wczytaj ponownie</button>
+          <button class="bimport" onclick="importConfirm()">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M1 7l4 4 8-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            Dodaj do listy
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CONFIRM DELETE ═══════ -->
+<div class="covl" id="confirm-ovl">
+  <div class="cbox">
+    <h3>Usuń zamówienie</h3>
+    <p id="confirm-msg"></p>
+    <div class="cact">
+      <button class="bcancel" onclick="closeConfirm()">Anuluj</button>
+      <button class="bdel" id="confirm-ok">Usuń</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div><!-- /#app -->
+
+<script>/* pdf.min.js removed - import PDF uses text paste */</script>
+<script>
+/* ════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════ */
+const SK='gaia-solar-v4';
+const DEFAULT_ORDERS=[
+  {"id":"1","producent":"Aiko","nlm":"NLMSC2026003440","date":"2026-04-20","model":"AIKO-A-MCE54DW 480W","desc":"480、+、P - Black on White、1200","power":480,"qty":911,"priceW":0.129,"amount":56409.12,"deliveryDate":"2026-05-15","incoterms":"FCA","port":"Rotterdam","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"2","producent":"Aiko","nlm":"NLMSC2026003441","date":"2026-04-20","model":"AIKO-A-MCE54DW 475W","desc":"475、+、P - Black on White、1200","power":475,"qty":407,"priceW":0.125,"amount":24165.62,"deliveryDate":"2026-05-15","incoterms":"FCA","port":"Rotterdam","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"3","producent":"Aiko","nlm":"NLMSC2026003442","date":"2026-04-20","model":"AIKO-A-MCE54DW 480W","desc":"480、+、P - Black on White、1200","power":480,"qty":222,"priceW":0.127,"amount":13533.12,"deliveryDate":"2026-05-15","incoterms":"FCA","port":"Rotterdam","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"4","producent":"Aiko","nlm":"NLMSC2026003438","date":"2026-04-13","model":"AIKO-A-MAH54 DW 465W","desc":"465、+、P - Black on White、1200","power":465,"qty":386,"priceW":0.121,"amount":21718.29,"deliveryDate":"2026-05-15","incoterms":"FCA","port":"Rotterdam","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"5","producent":"Aiko","nlm":"NLMSC2026003443","date":"2026-04-20","model":"AIKO-A-MAH60 MW 515W","desc":"515、-、P - Black on White、1200","power":515,"qty":666,"priceW":0.123,"amount":42187.77,"deliveryDate":"2026-05-15","incoterms":"FCA","port":"Rotterdam","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"6","producent":"Aiko","nlm":"NLMSC2026003444","date":"2026-04-20","model":"AIKO-A-MAH60 MW 520W","desc":"520、-、P - Black on White、1200","power":520,"qty":444,"priceW":0.123,"amount":28398.24,"deliveryDate":"2026-05-15","incoterms":"FCA","port":"Rotterdam","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"7","producent":"Aiko","nlm":"NLMSC2026003122","date":"2026-04-10","model":"AIKO-A-MAH54 DB 460W","desc":"460、+、S - Black on Black、1200","power":460,"qty":4810,"priceW":0.128,"amount":283212.8,"deliveryDate":"2026-06-22","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
+  {"id":"8","producent":"Aiko","nlm":"NLMSC2026003127","date":"2026-04-10","model":"AIKO-A-MAH54 MB 450W","desc":"450、-、S - Black on Black、1200","power":450,"qty":962,"priceW":0.121,"amount":52380.9,"deliveryDate":"2026-06-22","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"9","producent":"Aiko","nlm":"NLMSC2026003124","date":"2026-04-10","model":"AIKO-A-MAH60 MB 505W","desc":"505、-、S - Black on Black、1200","power":505,"qty":888,"priceW":0.121,"amount":54261.24,"deliveryDate":"2026-06-22","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""}]},
+  {"id":"mohgsmfx81hekrankhe","producent":"Jinko","nlm":"RO/000045/02/2026","date":"2026-02-05","model":"Jinko 590 N-Type Tiger Neo Bifacial Silver Frame","desc":"","power":590,"qty":720,"priceW":0.1021,"amount":43372.08,"deliveryDate":"2026-05-07","incoterms":"FCA","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""}]},
+  {"id":"mohgu3hpszoxznskekq","producent":"Jinko","nlm":"RO/000046/02/2026","date":"2026-02-05","model":"Jinko 590 N-Type Tiger Neo Bifacial Silver Frame","desc":"","power":590,"qty":720,"priceW":0.1021,"amount":43372.08,"deliveryDate":"2026-05-18","incoterms":"FCA","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""}]},
+  {"id":"mohgvfpnjv2r2uu3ek","producent":"Jinko","nlm":"RO/000011/04/2026","date":"2026-04-02","model":"Jinko 500 N-type Tiger Neo Bifacial Dual Glass Black Frame","desc":"","power":500,"qty":888,"priceW":0.12,"amount":53280,"deliveryDate":"2026-05-18","incoterms":"FCA","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""}]},
+  {"id":"mohiu2v44neak645f2i","producent":"Aiko","nlm":"NLMSC2026002531","date":"2026-04-20","model":"AIKO-AMCE60DB 540","desc":"Full Black, Dual Glass","power":540,"qty":1776,"priceW":0.143,"amount":137142.72,"deliveryDate":"2026-06-11","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"nie","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
+  {"id":"mohj7kueavi1dj6su1","producent":"Aiko","nlm":"NLMSC2026002531","date":"","model":"AIKO-A510-MAH60Mb","desc":"Full Black, Monoglass","power":510,"qty":3552,"priceW":0.121,"amount":219193.92,"deliveryDate":"","incoterms":"CIF","port":"Gdansk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
+  {"id":"mohjq6c1u79ptqapjg","producent":"Aiko","nlm":"NLMSC2026002409","date":"","model":"AIKO-A470-MAH54MB 470W","desc":"Full Black, Monoglass","power":470,"qty":2886,"priceW":0.12,"amount":162770.4,"deliveryDate":"2026-05-06","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
+  {"id":"mohkscuv24y2s8eqfv","producent":"Aiko","nlm":"NLMSC2026001302","date":"","model":"AIKO-A650-GRH66DW 650W","desc":"Dual Glass, Silver Frame","power":650,"qty":14400,"priceW":0.102,"amount":859248,"deliveryDate":"2026-05-07","incoterms":"CIF","port":"Gdańsk","notes":"","status":"wolne","zaliczka":"tak","containers":[{"status":"zarezerwowane","notes":"Cetrans - zapłacone"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Elementum"},{"status":"zarezerwowane","notes":"Strabag"},{"status":"zarezerwowane","notes":"Strabag"},{"status":"zarezerwowane","notes":"Strabag"},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""},{"status":"wolne","notes":""}]},
+];
+
+/* ════ STATE ════ */
+let orders=[],editingId=null,filterPort='',filterStatus='',filterDelPort='';
+let sortKey='nlm',sortDir=1,deleteTarget=null,modalStatus='wolne',modalZaliczka='nie';
+const expanded=new Set(),delExpanded=new Set();
+
+/* ════ CONTAINERS ════ */
+function parsePower(d){const m=String(d||'').match(/(\d+)/);return m?parseInt(m[1]):0;}
+function getCap(p){const pw=Number(p)||0;if(pw>=590)return 720;if(pw>=500)return 888;return 962;}
+function getCCount(o){const cap=getCap(o.power||parsePower(o.desc));return cap>0?Math.ceil(o.qty/cap):1;}
+function getContQty(o,i){const cap=getCap(o.power||parsePower(o.desc)),n=getCCount(o);return i<n-1?cap:o.qty-(n-1)*cap;}
+function syncContainers(o){
+  const n=getCCount(o);
+  if(!o.containers)o.containers=[];
+  while(o.containers.length<n)o.containers.push({status:o.status||'wolne',notes:'',deliveryDate:o.deliveryDate||''});
+  if(o.containers.length>n)o.containers.length=n;
+  // back-fill deliveryDate for old containers without it
+  o.containers.forEach(c=>{if(c.deliveryDate===undefined)c.deliveryDate=o.deliveryDate||'';});
+}
+function isAllWolne(o){syncContainers(o);return o.containers.every(c=>c.status==='wolne');}
+
+/* ════ SUPABASE ════ */
+const SUPA_URL='https://dpfiozxqmpkewitwyazs.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZmlveHhxbXBrZXdpd3R5YXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDIyMzgsImV4cCI6MjA5Mjg3ODIzOH0.JN5yKyl2PUe7hGDMgLW-pBUEISY-s43-ACQfRub2_ks';
+let supa=null;
+try{
+  supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+  console.log('✅ Supabase client created');
+}catch(e){
+  console.error('❌ Supabase init failed:',e);
+}
+const DB_ROW='main';
+let _saving=false;
+
+function syncStatus(state,msg){
+  const dot=document.getElementById('sync-dot'),lbl=document.getElementById('sync-label');
+  if(!dot)return;
+  dot.className='sync-dot '+state;
+  lbl.textContent=msg;
+}
+
+async function loadOrders(){
+  // Zawsze załaduj z localStorage jako punkt startowy
+  try{
+    const local=localStorage.getItem('gaia-solar-v4');
+    if(local){orders=JSON.parse(local);console.log('📱 Dane z localStorage:',orders.length,'zamówień');}
+  }catch(e){}
+
+  if(!supa){
+    console.error('Supabase not available — tryb offline');
+    syncStatus('err','tryb offline');
+    if(!orders||!orders.length) orders=DEFAULT_ORDERS.map(o=>({...o}));
+    orders.forEach(o=>{if(!o.power)o.power=parsePower(o.desc);if(!o.producent)o.producent='';if(!o.zaliczka)o.zaliczka='nie';syncContainers(o);});
+    renderAll();
+    return;
+  }
+  syncStatus('syncing','ładowanie…');
+  try{
+    console.log('📡 Fetching orders from Supabase…');
+    const {data,error}=await supa.from('orders').select('data').eq('id',DB_ROW).single();
+    if(error&&error.code!=='PGRST116') throw error;
+    const raw=data?.data;
+    console.log('📦 Raw data from DB:',raw);
+    if(Array.isArray(raw)&&raw.length){
+      orders=raw;
+      // Zapisz też lokalnie jako backup
+      try{localStorage.setItem('gaia-solar-v4',JSON.stringify(orders));}catch(e){}
+    } else if(!orders||!orders.length){
+      // Baza pusta i brak lokalnych — użyj domyślnych
+      orders=DEFAULT_ORDERS.map(o=>({...o}));
+      console.log('📝 Baza pusta — zapisuję dane domyślne…');
+      try{
+        await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
+        console.log('✅ Dane domyślne zapisane do Supabase');
+      }catch(e){console.warn('Nie udało się zapisać defaults:',e);}
+    }
+    // Jeśli mamy lokalne dane ale baza jest pusta — wyślij lokalne do bazy
+    else if(orders&&orders.length&&(!Array.isArray(raw)||!raw.length)){
+      console.log('📤 Wysyłam lokalne dane do Supabase…');
+      try{
+        await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
+      }catch(e){console.warn(e);}
+    }
+  }catch(e){
+    console.error('❌ Load error:',e);
+    syncStatus('err','błąd połączenia — tryb offline');
+    toast('⚠️ Supabase niedostępny — dane lokalne');
+    if(!orders||!orders.length) orders=DEFAULT_ORDERS.map(o=>({...o}));
+  }
+  orders.forEach(o=>{
+    if(!o.power)o.power=parsePower(o.desc);
+    if(!o.producent)o.producent='';
+    if(!o.zaliczka)o.zaliczka='nie';
+    syncContainers(o);
+  });
+  syncStatus('ok','zsynchronizowano');
+  renderAll();
+  startRealtime();
+}
+
+async function saveData(){
+  // Zawsze zapisz lokalnie
+  try{localStorage.setItem('gaia-solar-v4',JSON.stringify(orders));}catch(e){}
+
+  if(!supa||_saving)return;_saving=true;
+  syncStatus('syncing','zapisywanie…');
+  try{
+    const {error}=await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
+    if(error)throw error;
+    syncStatus('ok','zapisano ✓');
+  }catch(e){
+    console.error('❌ Save error:',e);
+    syncStatus('err','błąd zapisu — dane zapisane lokalnie');
+    toast('⚠️ Błąd Supabase — dane zapisane lokalnie');
+  }finally{_saving=false;}
+}
+
+function startRealtime(){
+  // Realtime wyłączony — odśwież stronę aby zobaczyć zmiany innych użytkowników
+  console.log('ℹ️ Tryb bez real-time — odśwież stronę aby pobrać aktualne dane');
+}
+
+/* ════ TABS ════ */
+function switchTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  if(btn.dataset.tab==='deliveries')renderDeliveries();
+}
+
+/* ════ FILTERS ════ */
+function setFilter(el){
+  const ft=el.dataset.ft,fv=el.dataset.f;
+  document.querySelectorAll('.fbtn[data-ft="'+ft+'"]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(ft==='port'){filterPort=fv;filterStatus='';}else{filterStatus=fv;filterPort='';}
+  renderTable();
+}
+function setDelFilter(el){
+  document.querySelectorAll('.fbtn[data-ft="dport"]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');filterDelPort=el.dataset.f;renderDeliveries();
+}
+function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=1;}renderTable();}
+function getFiltered(){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  return orders.filter(o=>{
+    const mp=!filterPort||o.port===filterPort;
+    const ms=!filterStatus||(filterStatus==='wolne'?isAllWolne(o):!isAllWolne(o));
+    const mq=!q||[o.nlm,o.model,o.port,o.desc,o.notes,o.producent].some(v=>String(v||'').toLowerCase().includes(q));
+    return mp&&ms&&mq;
+  }).sort((a,b)=>{
+    let av=sortKey==='_cc'?getCCount(a):a[sortKey];let bv=sortKey==='_cc'?getCCount(b):b[sortKey];
+    if(typeof av==='string')av=av.toLowerCase();if(typeof bv==='string')bv=bv.toLowerCase();
+    return av<bv?-sortDir:av>bv?sortDir:0;
+  });
+}
+
+/* ════ HELPERS ════ */
+function fmt(n,d=2){return Number(n).toLocaleString('pl-PL',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function portCls(p){return p==='Rotterdam'?'pr':p==='Gdańsk'?'pg':'po';}
+function portLabel(p){return p==='Rotterdam'?'RTD':p==='Gdańsk'?'GDA':p;}
+
+function stToggle(oid,idx,status){
+  const sw=status==='wolne';
+  return `<div class="stoggle"><button onclick="setCont('${oid}',${idx},'status','wolne')" class="${sw?'aw':''}" title="Wolne">W</button><button onclick="setCont('${oid}',${idx},'status','zarezerwowane')" class="${!sw?'az':''}" title="Zarezerwowane">Z</button></div>`;
+}
+function sumBadge(o,fn){
+  const w=o.containers.filter(c=>c.status==='wolne').length,n=getCCount(o),z=n-w;
+  let cls='cs-mixed',dot='#475569';
+  if(z===0){cls='cs-wolne';dot='var(--green)';}else if(w===0){cls='cs-zar';dot='var(--amber)';}
+  const lbl=z===0?'wszystkie wolne':w===0?'wszystkie zarez.':w+'W / '+z+'Z';
+  return `<span class="cs-sum ${cls}" onclick="${fn}"><span class="cs-dot" style="background:${dot}${z===0?';box-shadow:0 0 6px var(--green-glow)':w===0?';box-shadow:0 0 6px var(--amber-glow)':''}"></span>${lbl}</span>`;
+}
+function stockPickerHtml(oid, idx, cDate, changeFn){
+  const isRTD = cDate==='STOCK_RTD';
+  const isChiny = cDate==='STOCK_CHINY';
+  const isDate = !isRTD && !isChiny;
+  return `<div class="stock-picker">
+    <button class="spick-btn${isRTD?' active-rtd':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_RTD')">📦 Stock RTD</button>
+    <button class="spick-btn${isChiny?' active-chiny':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_CHINY')">🚢 Stock Chiny</button>
+    <button class="spick-btn${isDate&&cDate?' active-date':''}" onclick="showDateInput('${oid}',${idx},'${changeFn}')">📅 Data</button>
+    ${isDate?`<input type="date" class="spick-date" value="${cDate||''}" onchange="${changeFn}('${oid}',${idx},'deliveryDate',this.value)" oninput="${changeFn}('${oid}',${idx},'deliveryDate',this.value)">`:``}
+  </div>`;
+}
+
+function showDateInput(oid, idx, fn){
+  // Clear stock value and set empty date to show the date picker
+  const setter = fn==='setContDel'?setContDel:setCont;
+  setter(oid, idx, 'deliveryDate', '');
+}
+
+function deliveryDateLabel(d){
+  if(d==='STOCK_RTD') return `<span class="cont-del-badge cdb-rtd">📦 Stock RTD</span>`;
+  if(d==='STOCK_CHINY') return `<span class="cont-del-badge cdb-chiny">🚢 Stock Chiny</span>`;
+  return d||'—';
+}
+
+function contPanel(o){
+  const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
+  let h=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
+  for(let i=0;i<n;i++){
+    const c=o.containers[i],cq=getContQty(o,i),part=i===n-1&&cq<cap;
+    const cDate=c.deliveryDate||o.deliveryDate||'';
+    h+=`<div class="cont-row">
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
+      <div class="cont-qty-cell">${fmt(cq,0)}</div>
+      <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
+      <div>${stToggle(o.id,i,c.status)}</div>
+      <div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)"></div>
+    </div>`;
+  }
+  return h;
+}
+
+/* ════ STATS ════ */
+function renderStats(){
+  const tot=orders.reduce((s,o)=>s+o.amount,0),totQ=orders.reduce((s,o)=>s+o.qty,0),totC=orders.reduce((s,o)=>s+getCCount(o),0);
+  let w=0,z=0,zT=0;
+  orders.forEach(o=>{syncContainers(o);w+=o.containers.filter(c=>c.status==='wolne').length;z+=o.containers.filter(c=>c.status==='zarezerwowane').length;if(o.zaliczka==='tak')zT++;});
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Zamówień</div><div class="stat-value blue">${orders.length}</div><div class="stat-sub">${totC} kontenerów łącznie</div></div>
+    <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">${fmt(totQ,0)}</div><div class="stat-sub">sztuk · ${orders.length} PO</div></div>
+    <div class="stat"><div class="stat-label">Wartość łącznie</div><div class="stat-value green">${fmt(Math.round(tot/1000))}k</div><div class="stat-sub">EUR bez VAT</div></div>
+    <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div><div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div></div></div>
+    <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${orders.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
+}
+
+/* ════ TABLE ════ */
+function renderTable(){
+  const rows=getFiltered(),body=document.getElementById('tbl-body');
+  if(!rows.length){body.innerHTML='<tr class="empty-row"><td colspan="13" style="color:var(--text3);padding:60px;text-align:center;font-size:13px">Brak zamówień spełniających kryteria</td></tr>';document.getElementById('tbl-foot').innerHTML='';return;}
+  let html='';
+  rows.forEach(o=>{
+    syncContainers(o);
+    const n=getCCount(o),isExp=expanded.has(o.id);
+    const xBtn=n>1?`<button class="xbtn${isExp?' open':''}" onclick="toggleExp('${o.id}')"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:`<span class="no-xbtn"></span>`;
+    const cCol=n>1?`<span class="kont-badge" onclick="toggleExp('${o.id}')">${n}</span>`:`<span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span>`;
+    const sCl=n>1?sumBadge(o,`toggleExp('${o.id}')`):stToggle(o.id,0,o.containers[0]?.status||'wolne');
+    const zal=o.zaliczka==='tak';
+    const zCol=`<div class="ztoggle"><button onclick="setZaliczka('${o.id}','tak')" class="${zal?'atak':''}">TAK</button><button onclick="setZaliczka('${o.id}','nie')" class="${!zal?'anie':''}">NIE</button></div>`;
+    html+=`<tr class="mrow${isExp?' expanded':''}">
+      <td>${xBtn}</td>
+      <td class="td-producer">${o.producent||'—'}</td>
+      <td class="td-nlm">${o.nlm}</td>
+      <td><div class="td-model">${o.model}</div><div class="td-desc">${o.desc||''}</div></td>
+      <td class="td-num" style="font-weight:600;color:var(--text)">${fmt(o.qty,0)}</td>
+      <td>${cCol}</td>
+      <td class="td-num">${fmt(o.priceW,3)}</td>
+      <td class="td-num" style="font-weight:700;color:var(--blue)">${fmt(o.amount,2)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">${o.deliveryDate||'—'}<div style="font-size:9px;color:var(--text3);margin-top:2px">${o.incoterms}</div></td>
+      <td><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></td>
+      <td>${sCl}</td>
+      <td>${zCol}</td>
+      <td class="td-act"><button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button></td>
+    </tr>`;
+    if(n>1&&isExp)html+=`<tr class="cpanel-row"><td colspan="13"><div class="cpanel">${contPanel(o)}</div></td></tr>`;
+  });
+  body.innerHTML=html;
+  const tA=rows.reduce((s,o)=>s+o.amount,0),tQ=rows.reduce((s,o)=>s+o.qty,0),tC=rows.reduce((s,o)=>s+getCCount(o),0);
+  document.getElementById('tbl-foot').innerHTML=`<div class="tf-item"><div class="tf-label">Wyświetlanych</div><div class="tf-val">${rows.length}/${orders.length}</div></div><div class="tf-item"><div class="tf-label">Ilość</div><div class="tf-val">${fmt(tQ,0)} szt.</div></div><div class="tf-item"><div class="tf-label">Kontenery</div><div class="tf-val">${tC}</div></div><div class="tf-item"><div class="tf-label">Wartość</div><div class="tf-val">${fmt(tA,2)} €</div></div>`;
+}
+
+/* ════ DELIVERIES ════ */
+const PLM=['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+
+// Returns list of {order, contIdx, deliveryDate, qty, status, notes} for each container slot
+function getContainerSlots(){
+  const slots=[];
+  orders.forEach(o=>{
+    syncContainers(o);
+    const n=getCCount(o);
+    if(n<=1){
+      const date=(o.containers[0]?.deliveryDate)||o.deliveryDate||'';
+      if(!filterDelPort||o.port===filterDelPort)
+        slots.push({order:o,contIdx:0,deliveryDate:date,qty:o.qty,total:n});
+    } else {
+      for(let i=0;i<n;i++){
+        const c=o.containers[i];
+        const date=c.deliveryDate||o.deliveryDate||'';
+        if(!filterDelPort||o.port===filterDelPort)
+          slots.push({order:o,contIdx:i,deliveryDate:date,qty:getContQty(o,i),total:n});
+      }
+    }
+  });
+  // Include stock slots (STOCK_RTD, STOCK_CHINY) and dated slots; exclude empty
+  return slots.filter(s=>s.deliveryDate);
+}
+
+function renderDeliveries(){
+  const slots=getContainerSlots();
+  const el=document.getElementById('del-content');
+  if(!slots.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--ink4);font-size:13px">Brak zamówień z datą dostawy</div>';return;}
+
+  // Separate stock slots from dated slots
+  const stockRTD  = slots.filter(s=>s.deliveryDate==='STOCK_RTD');
+  const stockChiny= slots.filter(s=>s.deliveryDate==='STOCK_CHINY');
+  const dated     = slots.filter(s=>s.deliveryDate!=='STOCK_RTD'&&s.deliveryDate!=='STOCK_CHINY');
+
+  let html='';
+
+  // ── STOCK RTD ──
+  if(stockRTD.length){
+    html+=renderStockSection('STOCK_RTD','📦 Stock RTD','ssb-rtd','#3B82F6',stockRTD);
+  }
+  // ── STOCK CHINY ──
+  if(stockChiny.length){
+    html+=renderStockSection('STOCK_CHINY','🚢 Stock Chiny','ssb-chiny','#F97316',stockChiny);
+  }
+
+  // ── DATED DELIVERIES ──
+  const byM={};
+  dated.forEach(s=>{
+    const mk=s.deliveryDate.slice(0,7);
+    if(!byM[mk])byM[mk]=[];
+    byM[mk].push(s);
+  });
+
+  Object.keys(byM).sort().forEach(mk=>{
+    const[y,m]=mk.split('-'),title=PLM[parseInt(m)-1]+' '+y;
+    const mSlots=byM[mk].sort((a,b)=>a.deliveryDate.localeCompare(b.deliveryDate));
+    const uniqueOrders=new Set(mSlots.map(s=>s.order.id));
+    const tQ=mSlots.reduce((s,x)=>s+x.qty,0);
+    const tA=[...uniqueOrders].reduce((s,id)=>{const o=orders.find(x=>x.id===id);return s+(o?o.amount:0);},0);
+    const wC=mSlots.filter(s=>s.order.containers[s.contIdx]?.status==='wolne').length;
+    const zC=mSlots.filter(s=>s.order.containers[s.contIdx]?.status==='zarezerwowane').length;
+    const byD={};
+    mSlots.forEach(s=>{if(!byD[s.deliveryDate])byD[s.deliveryDate]=[];byD[s.deliveryDate].push(s);});
+
+    html+=`<div class="month-section"><div class="month-hdr"><div class="month-title">${title}</div><div class="month-divider"></div><div class="month-stats"><span class="ms-pill ms-total">${mSlots.length} kont. · ${uniqueOrders.size} zam.</span><span class="ms-pill ms-total">${fmt(tQ,0)} szt.</span><span class="ms-pill ms-value">${fmt(tA,0)} €</span>${wC?`<span class="ms-pill ms-green">${wC} wolnych</span>`:''}${zC?`<span class="ms-pill ms-amber">${zC} zarezerwowanych</span>`:''}</div></div>`;
+
+    Object.keys(byD).sort().forEach(date=>{
+      html+=renderDateGroup(date, byD[date]);
+    });
+    html+='</div>';
+  });
+
+  el.innerHTML=html;
+}
+
+function renderStockSection(type, label, badgeCls, dotColor, slots){
+  const tQ=slots.reduce((s,x)=>s+x.qty,0);
+  const wC=slots.filter(s=>s.order.containers[s.contIdx]?.status==='wolne').length;
+  const zC=slots.length-wC;
+  const byOrder={};
+  slots.forEach(s=>{if(!byOrder[s.order.id])byOrder[s.order.id]=[];byOrder[s.order.id].push(s);});
+
+  let html=`<div class="month-section">
+    <div class="month-hdr">
+      <div class="month-title" style="display:flex;align-items:center;gap:10px">
+        <span class="stock-section-badge ${badgeCls}">${label}</span>
+      </div>
+      <div class="month-divider"></div>
+      <div class="month-stats">
+        <span class="ms-pill ms-total">${slots.length} kont.</span>
+        <span class="ms-pill ms-total">${fmt(tQ,0)} szt.</span>
+        ${wC?`<span class="ms-pill ms-green">${wC} wolnych</span>`:''}
+        ${zC?`<span class="ms-pill ms-amber">${zC} zarezerwowanych</span>`:''}
+      </div>
+    </div>
+    <div class="date-group">`;
+
+  Object.values(byOrder).forEach(oSlots=>{
+    html+=renderDeliveryCard(oSlots, type);
+  });
+  html+=`</div></div>`;
+  return html;
+}
+
+function renderDateGroup(date, slots){
+  const fD=new Date(date).toLocaleDateString('pl-PL',{day:'numeric',month:'long',year:'numeric'});
+  const byOrder={};
+  slots.forEach(s=>{if(!byOrder[s.order.id])byOrder[s.order.id]=[];byOrder[s.order.id].push(s);});
+  let html=`<div class="date-group"><div class="date-label"><span class="date-label-dot"></span>${fD}</div>`;
+  Object.values(byOrder).forEach(oSlots=>{
+    html+=renderDeliveryCard(oSlots, date);
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderDeliveryCard(oSlots, dateKey){
+  const o=oSlots[0].order;
+  const isExp=delExpanded.has(o.id+'-'+dateKey);
+  const zal=o.zaliczka==='tak';
+  const wN=oSlots.filter(s=>o.containers[s.contIdx]?.status==='wolne').length;
+  const zN=oSlots.length-wN;
+
+  let sBdg;
+  if(oSlots.length===1){
+    const c=o.containers[oSlots[0].contIdx];
+    sBdg=stToggle(o.id,oSlots[0].contIdx,c?.status||'wolne');
+  } else {
+    let cls='cs-mixed',dot='#475569';
+    if(zN===0){cls='cs-wolne';dot='var(--green)';}else if(wN===0){cls='cs-zar';dot='var(--amber)';}
+    const lbl=zN===0?'wszystkie wolne':wN===0?'wszystkie zarez.':wN+'W / '+zN+'Z';
+    sBdg=`<span class="cs-sum ${cls}" onclick="delDateToggleExp('${o.id}','${dateKey}')"><span class="cs-dot" style="background:${dot}"></span>${lbl}</span>`;
+  }
+
+  const dCardId=`dcard-${o.id}-${dateKey.replace(/[^a-z0-9]/gi,'')}`;
+  const slotQty=oSlots.reduce((s,x)=>s+x.qty,0);
+  const contLabel=oSlots.length===1?`Kont. ${oSlots[0].contIdx+1}/${oSlots[0].total}`:`${oSlots.length} kont.`;
+
+  return `<div class="del-card${isExp?' exp':''} ${o.port==='Rotterdam'?'port-rtd':o.port==='Gdańsk'?'port-gda':''}" id="${dCardId}">
+    <div class="del-card-main" onclick="delDateToggleExp('${o.id}','${dateKey}')">
+      <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
+      <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div></div>
+      <div class="dc-num" style="font-weight:700;color:var(--ink)">${fmt(slotQty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
+      <div><span class="dc-cont-label">${contLabel}</span></div>
+      <div>${sBdg}</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span>
+        ${zal?'<span class="zaliczka-tag">ZALICZKA ✓</span>':''}
+      </div>
+      <div class="dc-num" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+      <div class="dc-arrow"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="del-panel"><div class="cpanel">${contPanelSlots(o,oSlots)}</div></div>
+  </div>`;
+}
+
+function delDateToggleExp(oid,dateKey){
+  const key=oid+'-'+dateKey;
+  if(delExpanded.has(key))delExpanded.delete(key);else delExpanded.add(key);
+  const cardId=`dcard-${oid}-${dateKey.replace(/[^a-z0-9]/gi,'')}`;
+  const card=document.getElementById(cardId);
+  if(card) card.classList.toggle('exp',delExpanded.has(key));
+}
+
+function contPanelSlots(o,slots){
+  const cap=getCap(o.power||parsePower(o.desc)),n=getCCount(o);
+  let h=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
+  slots.forEach(s=>{
+    const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
+    const cDate=c.deliveryDate||o.deliveryDate||'';
+    h+=`<div class="cont-row">
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
+      <div class="cont-qty-cell">${fmt(cq,0)}</div>
+      <div>${stockPickerHtml(o.id,i,cDate,'setContDel')}</div>
+      <div>${stToggle(o.id,i,c.status)}</div>
+      <div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)"></div>
+    </div>`;
+  });
+  return h;
+}
+
+function setContDel(oid,idx,f,v){
+  setCont(oid,idx,f,v,true);
+}
+
+/* ════ INTERACTIONS ════ */
+function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
+const debT={};
+function setContDebounced(oid,idx,f,v){clearTimeout(debT[oid+idx+f]);debT[oid+idx+f]=setTimeout(()=>setCont(oid,idx,f,v,true),600);}
+function setCont(oid,idx,f,v,silent=false){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  syncContainers(o);if(!o.containers[idx])return;
+  o.containers[idx][f]=v;if(getCCount(o)===1)o.status=o.containers[0].status;
+  saveData();
+  if(!silent){renderAll();}else{renderStats();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
+}
+function setZaliczka(oid,v){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;o.zaliczka=v;saveData();renderAll();toast('Zaliczka zaktualizowana ✓');
+}
+function renderAll(){renderStats();renderTable();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
+
+/* ════ MODAL ════ */
+function updateHint(){
+  const pw=parseInt(document.getElementById('f-power').value)||parsePower(document.getElementById('f-desc').value);
+  const qty=parseInt(document.getElementById('f-qty').value)||0,cap=getCap(pw),n=qty&&cap?Math.ceil(qty/cap):0;
+  const sfx=n===1?'kontener':n<5?'kontenery':'kontenerów';
+  document.getElementById('power-hint').textContent=pw?`${cap} szt./kont.${n?' · '+n+' '+sfx:''}`:'';}
+function calcAmt(){
+  updateHint();
+  const pw=parseFloat(document.getElementById('f-power').value)||parsePower(document.getElementById('f-desc').value);
+  const pW=parseFloat(document.getElementById('f-priceW').value)||0,qty=parseFloat(document.getElementById('f-qty').value)||0;
+  if(pW&&pw&&qty)document.getElementById('f-amount').value=(pW*pw*qty).toFixed(2);
+}
+function selStatus(s){modalStatus=s;document.getElementById('sopt-w').className='sopt'+(s==='wolne'?' sw':'');document.getElementById('sopt-z').className='sopt'+(s==='zarezerwowane'?' sz':'');}
+function selZaliczka(v){modalZaliczka=v;document.getElementById('sopt-tak').className='sopt'+(v==='tak'?' stak':'');document.getElementById('sopt-nie').className='sopt'+(v==='nie'?' snie':'');}
+function openModal(id=null){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  editingId=id;
+  const mo=id?orders.find(o=>o.id===id):null;
+  document.getElementById('modal-title').textContent=id?'Edytuj zamówienie':'Nowe zamówienie';
+  const d=mo||{producent:'',nlm:'',date:new Date().toISOString().slice(0,10),deliveryDate:'',model:'',desc:'',power:'',qty:'',priceW:'',amount:'',incoterms:'FCA',port:'Rotterdam',notes:'',status:'wolne',zaliczka:'nie'};
+  ['producent','nlm','date','deliveryDate','model','desc','power','qty','priceW','amount','incoterms','port','notes'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.value=d[k]||'';});
+  selStatus(d.status||'wolne');selZaliczka(d.zaliczka||'nie');updateHint();
+  document.getElementById('modal-ovl').classList.add('open');
+}
+function ovlClick(e,id){if(e.target===document.getElementById(id)){if(id==='modal-ovl')closeModal();else if(id==='import-ovl')closeImport();}}
+function closeModal(){document.getElementById('modal-ovl').classList.remove('open');editingId=null;}
+function saveOrder(){
+  const g=id=>document.getElementById(id).value.trim();
+  if(!g('f-nlm')&&!g('f-model')){toast('Wypełnij NLM i nazwę modułu');return;}
+  const pw=parseInt(g('f-power'))||parsePower(g('f-desc'));
+  const o={id:editingId||uid(),producent:g('f-producent'),nlm:g('f-nlm'),date:g('f-date'),model:g('f-model'),desc:g('f-desc'),power:pw,qty:parseFloat(g('f-qty'))||0,priceW:parseFloat(g('f-priceW'))||0,amount:parseFloat(g('f-amount'))||0,deliveryDate:g('f-deliveryDate'),incoterms:g('f-incoterms'),port:g('f-port'),notes:g('f-notes'),status:modalStatus,zaliczka:modalZaliczka,containers:null};
+  if(editingId){const old=orders.find(x=>x.id===editingId);if(old?.containers)o.containers=old.containers;}
+  syncContainers(o);
+  if(editingId){const i=orders.findIndex(x=>x.id===editingId);if(i>-1)orders[i]=o;}else orders.push(o);
+  saveData();renderAll();closeModal();toast(editingId?'Zaktualizowano ✓':'Dodano zamówienie ✓');
+}
+
+/* ════ DELETE ════ */
+function confirmDel(id){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  deleteTarget=id;
+  const o=orders.find(x=>x.id===id);
+  document.getElementById('confirm-msg').textContent=`Zamówienie ${o?.nlm||id} (${getCCount(o)} kont.) zostanie trwale usunięte.`;
+  document.getElementById('confirm-ovl').classList.add('open');
+  document.getElementById('confirm-ok').onclick=()=>{orders=orders.filter(x=>x.id!==deleteTarget);expanded.delete(deleteTarget);saveData();renderAll();closeConfirm();toast('Usunięto');};
+}
+function closeConfirm(){document.getElementById('confirm-ovl').classList.remove('open');deleteTarget=null;}
+
+/* ════ PDF IMPORT ════ */
+let parsedData=null;
+function openImport(){if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}document.getElementById('import-ovl').classList.add('open');resetImport();}
+function closeImport(){document.getElementById('import-ovl').classList.remove('open');}
+
+function switchImportTab(tab){
+  document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('itab-'+tab).classList.add('active');
+  document.getElementById('import-tab-pdf').style.display=tab==='pdf'?'block':'none';
+  document.getElementById('import-tab-text').style.display=tab==='text'?'block':'none';
+  document.getElementById('import-status').style.display='none';
+  document.getElementById('import-preview').style.display='none';
+}
+
+function resetImport(){
+  parsedData=null;
+  if(document.getElementById('pdf-input'))document.getElementById('pdf-input').value='';
+  if(document.getElementById('paste-text'))document.getElementById('paste-text').value='';
+  document.getElementById('import-status').style.display='none';
+  document.getElementById('import-preview').style.display='none';
+  document.getElementById('import-zone').style.display='block';
+  switchImportTab('pdf');
+}
+function dragOver(e){e.preventDefault();document.getElementById('import-zone').classList.add('drag');}
+function dragLeave(){document.getElementById('import-zone').classList.remove('drag');}
+function dropFile(e){e.preventDefault();dragLeave();if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);}
+
+async function handleFile(file){
+  if(!file||file.type!=='application/pdf'){toast('Wybierz plik PDF');return;}
+  document.getElementById('import-zone').style.display='none';
+  showIS('loading','Odczytuję plik PDF… (może potrwać chwilę)');
+  try{
+    const text=await extractPdfText(file);
+    if(!text||text.trim().length<20){
+      showIS('error','Nie udało się odczytać tekstu z pliku. Użyj zakładki "Wklej tekst" — otwórz PDF w przeglądarce, zaznacz wszystko Ctrl+A, skopiuj Ctrl+C i wklej tam.');
+      return;
+    }
+    const data=parsePoText(text);
+    if(!data.nlm&&!data.model){
+      showIS('error','Plik odczytany, ale nie rozpoznano formatu PO. Spróbuj zakładki "Wklej tekst".');
+      return;
+    }
+    parsedData=data;
+    showIS('ok','Dane odczytane pomyślnie!');
+    setTimeout(()=>{document.getElementById('import-status').style.display='none';showPreview(data,text);},700);
+  }catch(err){
+    showIS('error','Błąd: '+err.message+'. Użyj zakładki "Wklej tekst" jako alternatywy.');
+  }
+}
+
+function parseFromText(){
+  const text=(document.getElementById('paste-text').value||'').trim();
+  if(text.length<20){showIS('error','Wklej tekst skopiowany z dokumentu PDF.');return;}
+  const data=parsePoText(text);
+  if(!data.nlm&&!data.model){
+    showIS('error','Nie rozpoznano danych PO. Upewnij się że kopiujesz z dokumentu Purchase Order od Aiko.');
+    return;
+  }
+  showIS('ok','Dane sparsowane pomyślnie!');
+  setTimeout(()=>{document.getElementById('import-status').style.display='none';showPreview(data,text);},600);
+}
+
+function showIS(type,msg){
+  const el=document.getElementById('import-status');el.style.display='flex';el.className='import-status';
+  if(type==='loading'){el.className+=' is-loading';el.innerHTML=`<div class="spinner"></div>${msg}`;}
+  else if(type==='error'){el.className+=' is-error';el.style.display='block';el.innerHTML='⚠️ '+msg;}
+  else{el.className+=' is-ok';el.innerHTML='✓ '+msg;}
+}
+function showPreview(d, rawText){
+  const fs=[
+    {key:'producent',label:'Producent',val:d.producent||''},
+    {key:'nlm',label:'Nr dokumentu (NLM / zamówienia / faktury)',val:d.nlm||''},
+    {key:'date',label:'Data zamówienia',val:d.date||'',type:'date'},
+    {key:'deliveryDate',label:'Termin dostawy (CRD)',val:d.deliveryDate||'',type:'date'},
+    {key:'model',label:'Nazwa modułu',val:d.model||''},
+    {key:'desc',label:'Opis',val:d.desc||''},
+    {key:'power',label:'Moc (W)',val:d.power||'',type:'number'},
+    {key:'qty',label:'Ilość (szt.)',val:d.qty||'',type:'number'},
+    {key:'priceW',label:'Cena/Wp (€)',val:d.priceW||'',type:'number'},
+    {key:'amount',label:'Wartość (€)',val:d.amount||'',type:'number'},
+    {key:'incoterms',label:'Incoterms',val:d.incoterms||'FCA'},
+    {key:'port',label:'Port',val:d.port||''},
+  ];
+  document.getElementById('ip-fields').innerHTML=fs.map(f=>`<div class="ip-field"><div class="ip-label">${f.label}</div><input class="ip-val" id="ip-${f.key}" type="${f.type||'text'}" value="${String(f.val||'').replace(/"/g,'&quot;')}" step="${f.type==='number'?'any':''}"></div>`).join('');
+  // Panel surowego tekstu — pomaga zdiagnozować co parser odczytał
+  const debugId='ip-raw-panel';
+  let debugHtml='';
+  if(rawText){
+    const preview=rawText.replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0,2000);
+    debugHtml=`<details id="${debugId}" style="margin-top:12px">
+      <summary style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink4);cursor:pointer;user-select:none;padding:6px 0">
+        🔍 Pokaż surowy tekst odczytany z PDF (diagnostyka)
+      </summary>
+      <textarea readonly style="width:100%;height:120px;margin-top:8px;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink3);background:var(--paper2);resize:vertical;line-height:1.5">${preview}${rawText.length>2000?'\n…[skrócono]':''}</textarea>
+    </details>`;
+  }
+  document.getElementById('import-preview').style.display='block';
+  // Wstaw debug panel za gridem pól
+  const existing=document.getElementById(debugId);
+  if(existing)existing.remove();
+  if(debugHtml){
+    const tmp=document.createElement('div');tmp.innerHTML=debugHtml;
+    document.getElementById('import-preview').appendChild(tmp.firstChild);
+  }
+}
+function importConfirm(){
+  const g=id=>{const el=document.getElementById('ip-'+id);return el?el.value.trim():''};
+  const pw=parseInt(g('power'))||parsePower(g('desc'));
+  const o={id:uid(),producent:g('producent'),nlm:g('nlm'),date:g('date'),model:g('model'),desc:g('desc'),power:pw,qty:parseFloat(g('qty'))||0,priceW:parseFloat(g('priceW'))||0,amount:parseFloat(g('amount'))||0,deliveryDate:g('deliveryDate'),incoterms:g('incoterms'),port:g('port'),notes:'',status:'wolne',zaliczka:'nie',containers:null};
+  syncContainers(o);orders.push(o);saveData();renderAll();closeImport();toast('Zaimportowano ✓');
+}
+
+/* Strategia 1: PDF.js z importScripts blob worker — omija CORS przy file://
+   Strategia 2: Dekompresja strumieni PDF (DecompressionStream API)
+   Strategia 3: Raw ASCII fallback */
+async function extractPdfText(file){
+  const ab=await file.arrayBuffer();
+
+  // ── Strategia 1: PDF.js z blob importScripts ──
+  if(typeof pdfjsLib!=='undefined'){
+    const WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    try{
+      // Blob worker może używać importScripts() nawet z file:// — omija CORS
+      const blob=new Blob([`importScripts('${WORKER}');`],{type:'application/javascript'});
+      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(blob);
+    }catch{
+      pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER;
+    }
+    try{
+      const loadTask=pdfjsLib.getDocument({data:new Uint8Array(ab),verbosity:0});
+      const pdf=await Promise.race([
+        loadTask.promise,
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),12000))
+      ]);
+      let t='';
+      for(let i=1;i<=pdf.numPages;i++){
+        const pg=await pdf.getPage(i);
+        const tc=await pg.getTextContent();
+        t+=tc.items.map(x=>x.str).join(' ')+'\n';
+        pg.cleanup();
+      }
+      if(t.trim().length>50)return t;
+    }catch(e){console.warn('PDF.js:',e.message);}
+  }
+
+  // ── Strategia 2: Ręczna dekompresja strumieni PDF ──
+  try{
+    const decomp=await decompressedPdfText(ab);
+    if(decomp&&decomp.trim().length>50)return decomp;
+  }catch(e){console.warn('Decompress:',e.message);}
+
+  // ── Strategia 3: Raw ASCII sekwencje ──
+  return rawPdfExtract(ab);
+}
+
+async function decompressedPdfText(ab){
+  if(typeof DecompressionStream==='undefined')return '';
+  const raw=new TextDecoder('latin1').decode(new Uint8Array(ab));
+  const results=[];
+  // Znajdź wszystkie strumienie w PDF (zwykle skompresowane FlateDecode)
+  const sRe=/stream\r?\n([\s\S]{4,80000}?)\r?\nendstream/g;
+  let m;
+  while((m=sRe.exec(raw))!==null){
+    const s=m[1];
+    if(s.length<4)continue;
+    const bytes=new Uint8Array(s.length);
+    for(let i=0;i<s.length;i++)bytes[i]=s.charCodeAt(i)&0xFF;
+    // Próbuj deflate (zlib RFC1950) i deflate-raw (RFC1951)
+    for(const fmt of['deflate','deflate-raw']){
+      try{
+        const ds=new DecompressionStream(fmt);
+        const wr=ds.writable.getWriter();
+        const rd=ds.readable.getReader();
+        wr.write(bytes);wr.close();
+        const chunks=[];
+        let r=await rd.read();
+        while(!r.done){chunks.push(r.value);r=await rd.read();}
+        const tot=chunks.reduce((a,b)=>a+b.length,0);
+        const out=new Uint8Array(tot);
+        let off=0;for(const c of chunks){out.set(c,off);off+=c.length;}
+        const txt=new TextDecoder('latin1').decode(out);
+        const ex=extractTjText(txt);
+        if(ex.length>10){results.push(ex);break;}
+      }catch{/* spróbuj następny */}
+    }
+  }
+  return results.join(' ');
+}
+
+function extractTjText(text){
+  const parts=[];
+  const rTj=/\(([^)\\]{0,400}(?:\\.[^)\\]{0,400})*)\)\s*Tj/g;
+  let m;
+  while((m=rTj.exec(text))!==null)parts.push(unescapePdf(m[1]));
+  const rTJ=/\[((?:[^\[\]]|\\[\s\S]){0,2000})\]\s*TJ/g;
+  while((m=rTJ.exec(text))!==null){
+    const rS=/\(([^)\\]{0,300}(?:\\.[^)\\]{0,300})*)\)/g;
+    let sm,sub=[];
+    while((sm=rS.exec(m[1]))!==null)sub.push(unescapePdf(sm[1]));
+    if(sub.length)parts.push(sub.join(''));
+  }
+  return parts.join(' ');
+}
+
+function rawPdfExtract(ab){
+  const raw=new TextDecoder('latin1').decode(new Uint8Array(ab));
+  const parts=[];
+  const rTj=/\(([^)\\]{0,400}(?:\\.[^)\\]{0,400})*)\)\s*Tj/g;
+  let m;
+  while((m=rTj.exec(raw))!==null)parts.push(unescapePdf(m[1]));
+  const rTJ=/\[((?:[^\[\]]|\\[\s\S]){0,1500})\]\s*TJ/g;
+  while((m=rTJ.exec(raw))!==null){
+    const rS=/\(([^)\\]{0,200}(?:\\.[^)\\]{0,200})*)\)/g;
+    let sm,sub=[];
+    while((sm=rS.exec(m[1]))!==null)sub.push(unescapePdf(sm[1]));
+    if(sub.length)parts.push(sub.join(''));
+  }
+  const text=parts.join(' ');
+  if(text.trim().length>30)return text;
+  return(raw.match(/[\x20-\x7E]{5,}/g)||[]).join(' ');
+}
+
+function unescapePdf(s){
+  return s
+    .replace(/\\n/g,' ').replace(/\\r/g,' ').replace(/\\t/g,' ')
+    .replace(/\\\\/g,'\\').replace(/\\\(/g,'(').replace(/\\\)/g,')')
+    .replace(/\\(\d{3})/g,(_,oct)=>{const c=parseInt(oct,8);return c<128?String.fromCharCode(c):'';});
+}
+function parsePoText(text){
+  const d={};
+  // Normalizacja: \r → spacja, wielokrotne spacje → jedna
+  const t=text.replace(/\r/g,' ').replace(/[ \t]{2,}/g,' ');
+
+  // ══ Nr dokumentu ══
+  const nlmM=
+    t.match(/NLMSC\d+/i)
+    ||t.match(/\bnr\s+([A-Z]{1,6}\/\d{2,10}\/\d{2}\/\d{4})/i)
+    ||t.match(/([A-Z]{1,6}\/\d{3,10}\/\d{2}\/\d{4})/i)
+    ||t.match(/Nr\s*faktury[:\s]+([A-Z0-9][A-Z0-9\/\-]{3,30})/i)
+    ||t.match(/Invoice\s*(?:No\.?)?[:\s]+([A-Z0-9][A-Z0-9\/\-]{3,30})/i);
+  d.nlm=nlmM?(nlmM[1]||nlmM[0]).trim():'—';
+
+  // ══ Producent ══
+  const brands=[
+    ['Aiko',/\baiko\b/i],['JA Solar',/\bja[\s-]solar\b/i],['Jinko',/\bjinko\b/i],
+    ['Longi',/\blongi\b/i],['Canadian Solar',/\bcanadian\s*solar\b/i],
+    ['Trina',/\btrina\b/i],['Risen',/\brisen\b/i],['Q Cells',/\bq[\s.]?cells?\b/i],
+  ];
+  d.producent='';
+  for(const[name,re] of brands){if(re.test(t)){d.producent=name;break;}}
+
+  // ══ Daty ══
+  const dates=t.match(/\d{4}-\d{2}-\d{2}/g)||[];
+  if(dates[0])d.date=dates[0];
+  // CRD — szukaj "termin dostawy/delivery" lub druga data
+  const crdLabelM=t.match(/(?:Termin\s+(?:dostawy|realizacji|płatności)|Delivery\s*date)[:\s]*(\d{4}-\d{2}-\d{2})/i);
+  if(crdLabelM&&crdLabelM[1]!==d.date)d.deliveryDate=crdLabelM[1];
+
+  // ══ DANE Z TABELI PRODUKTÓW ══
+  // Podejście modułowe: szukaj każdej wartości niezależnie
+  // Format kolumn: Nazwa | Ilość | J.m. | Cena | Wartość
+  // Polskie liczby dziesiętne: przecinek ("720,0000" = 720, "60,2390" = 60.239)
+
+  const parsePolish=s=>parseFloat((s||'').replace(/\s/g,'').replace(',','.'));
+
+  // 1. Ilość: "720,0000 szt" lub "720 szt" lub "PCS 720"
+  const qtyM=
+    t.match(/\b(\d{1,6})[,.]0{3,4}\s*(?:szt\.?|pcs\.?|kpl\.?|m2\.?)/i)  // 720,0000 szt
+    ||t.match(/\b(\d{1,6})\s*(?:szt\.?|pcs\.?|kpl\.?)/i)
+    ||t.match(/PCS\s+([\d,]+)/i);
+  if(qtyM)d.qty=parseInt((qtyM[1]||'').replace(/,/g,''));
+
+  // 2. Cena za sztukę: liczba Z 2-4 miejscami po przecinku/kropce, PO jednostce miary
+  const cenaM=
+    t.match(/(?:szt\.?|pcs\.?|kpl\.?)\s+([\d ]{1,8}[,.][\d]{2,4})(?!\d)/i)
+    ||t.match(/(?:Cena|Unit\s*price)[^\d]{0,30}([\d ]{1,8}[,.][\d]{2,4})/i);
+  if(cenaM){
+    const perPcs=parsePolish(cenaM[1]);
+    if(perPcs>=0.05&&perPcs<2)d.priceW=parseFloat(perPcs.toFixed(4));
+    else d._cenaPerPcs=perPcs; // cena za sztukę → przelicz po znalezieniu mocy
+  }
+
+  // 3. Wartość łączna netto: liczba po cenie jednostkowej
+  const wartoscM=
+    t.match(/(?:szt\.?|pcs\.?|kpl\.?)\s+[\d ]+[,.][\d]+\s+([\d ]{1,12}[,.][\d]{2,4})/i)
+    ||t.match(/(?:Netto|Razem|Total)[:\s]*([\d ]{1,12}[,.][\d]{2})\s/i)
+    ||t.match(/TOTAL[^0-9]{0,20}([\d,]+\.\d{2})/i);
+  if(wartoscM){
+    const v=parsePolish(wartoscM[1]);
+    if(v>0)d.amount=parseFloat(v.toFixed(2));
+  }
+
+  // 4. Nazwa produktu: tekst przed wzorcem ilości (lub po "1 " w tabeli)
+  if(!d.model&&qtyM&&qtyM.index!==undefined){
+    // Weź tekst do ~200 znaków PRZED wzorcem ilości
+    const pos=t.indexOf(qtyM[0]);
+    if(pos>0){
+      let before=t.slice(Math.max(0,pos-200),pos).trim();
+      // Usuń nagłówki tabelaryczne (EUR), numer wiersza "1 ", itp.
+      before=before.replace(/.*(?:EUR\)|Amount|Wartość)[^\n]*\n?\s*/is,'');
+      before=before.replace(/^[\s\n]*\d\s+/,'');
+      d.model=before.trim().replace(/\s+/g,' ').slice(-120).trim();
+    }
+  }
+  // Fallback modelu — Aiko format
+  if(!d.model){
+    const mdlM=t.match(/AIKO-A-[\w]+(?:\s+\w+)?/i);
+    if(mdlM)d.model=mdlM[0].trim().replace(/\s+/g,' ');
+  }
+
+  // 5. Opis Aiko (480、+、P - Black on White)
+  const dscM=t.match(/(\d{3,4}[、，,][^,\n]{0,60}(?:Black|White)[^,\n]{0,30})/i);
+  if(dscM)d.desc=dscM[1].trim();
+
+  // ══ Moc modułu ══
+  // Szukaj w nazwie lub w całym tekście: "590 N-Type", "480Wp", "480 W"
+  const mocSrc=(d.model||'')+' '+t;
+  const mocM=
+    mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*(?:N-Type|N type|TOPCon|PERC|HJT|Tiger|Bifacial|half.cell)/i)
+    ||mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*[Ww][pP]\b/)
+    ||mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*W\b(?!\s*\/)/i)
+    ||t.match(/Moc[:\s]*([3-9]\d{2}|[1-9]\d{3})\s*[Ww]/i)
+    ||(d.desc&&d.desc.match(/^(\d{3,4})/));
+  if(mocM)d.power=parseInt(mocM[1]||mocM[0]);
+
+  // Przelicz cenę/szt → cena/Wp jeśli mamy moc
+  if(!d.priceW&&d._cenaPerPcs&&d.power){
+    d.priceW=parseFloat((d._cenaPerPcs/d.power).toFixed(4));
+  }
+  delete d._cenaPerPcs;
+
+  // ══ Incoterms & Port ══
+  if(/\bFCA\b/.test(t))d.incoterms='FCA';
+  else if(/\bCIF\b/.test(t))d.incoterms='CIF';
+  else if(/\bFOB\b/.test(t))d.incoterms='FOB';
+  else if(/\bDAP\b/.test(t))d.incoterms='DAP';
+  else d.incoterms='';
+
+  if(/Rotterdam/i.test(t))d.port='Rotterdam';
+  else if(/Gda[ńn]sk/i.test(t))d.port='Gdańsk';
+  else if(/Hamburg/i.test(t))d.port='Hamburg';
+  else if(/Antwerp/i.test(t))d.port='Antwerpen';
+  else d.port='';
+
+  return d;
+}
+
+/* ════ TOAST ════ */
+let toastT;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);}
+
+/* ════ INIT ════ */
+(function(){
+  // Zegar
+  const now=new Date();
+  const hdrDate=document.getElementById('hdr-date');
+  if(hdrDate) hdrDate.innerHTML=now.toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br>'+now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+
+  // Tryb admin / podgląd
+  const ADMIN_PASSWORD='gaia2026';
+  const params=new URLSearchParams(window.location.search);
+  window.isAdmin=params.get('admin')===ADMIN_PASSWORD;
+
+  const modeBadge=document.getElementById('mode-badge');
+  const hdrActions=document.getElementById('hdr-actions');
+  if(modeBadge){
+    modeBadge.style.display='block';
+    if(window.isAdmin){
+      modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(213,161,111,.2);color:#D5A16F;border:1px solid rgba(213,161,111,.3)';
+      modeBadge.textContent='✏️ ADMIN';
+    } else {
+      if(hdrActions) hdrActions.style.display='none';
+      modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.25)';
+      modeBadge.textContent='👁 PODGLĄD';
+    }
+  }
+
+  // Uruchom aplikację — zawsze, niezależnie od błędów powyżej
+  loadOrders();
+})();
+</script>
+
+
+</body></html>
