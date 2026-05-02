@@ -233,7 +233,23 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cont-date{border:1.5px solid var(--border);border-radius:7px;padding:4px 7px;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);background:var(--paper);outline:none;width:100%;transition:.15s;}
 .cont-date:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
 
-/* ── STOCK PICKER ── */
+/* ── BULK EDIT BAR ── */
+.bulk-bar{
+  display:grid;grid-template-columns:130px 65px 1fr auto auto;gap:10px;align-items:center;
+  padding:8px 16px;background:linear-gradient(90deg,rgba(213,161,111,.08),rgba(213,161,111,.03));
+  border-bottom:2px solid var(--gold3);
+}
+.bulk-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);font-family:'Inter',sans-serif;grid-column:1/3}
+.bulk-apply-btn{
+  padding:4px 14px;border-radius:7px;border:1.5px solid var(--gold);
+  background:var(--gold);color:#fff;font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.bulk-apply-btn:hover{background:var(--gold-dk);border-color:var(--gold-dk)}
+.bulk-status-toggle{display:inline-flex;border-radius:7px;overflow:hidden;border:1.5px solid var(--border);background:var(--paper2);gap:2px;padding:2px;}
+.bulk-status-toggle button{width:26px;height:22px;border:none;cursor:pointer;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;background:transparent;color:var(--ink4);transition:all .15s;}
+.bulk-status-toggle button.baw{background:var(--green);color:#fff}
+.bulk-status-toggle button.baz{background:var(--red);color:#fff}
 .stock-picker{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .spick-btn{
   padding:3px 9px;border-radius:6px;border:1.5px solid var(--border);
@@ -1012,9 +1028,37 @@ function deliveryDateLabel(d){
   return d||'—';
 }
 
+function bulkSetAll(oid, field, value){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  syncContainers(o);
+  o.containers.forEach(c=>{ c[field]=value; });
+  saveData();
+  renderAll();
+  toast(`✓ Zastosowano dla wszystkich ${o.containers.length} kontenerów`);
+}
+
+function bulkBarHtml(oid, n){
+  if(n<=1) return '';
+  return `<div class="bulk-bar">
+    <div class="bulk-label" style="grid-column:1/3">Zastosuj do wszystkich ${n} kontenerów:</div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_RTD');renderAll()">📦 Stock RTD</button>
+      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_CHINY');renderAll()">🚢 Stock Chiny</button>
+      <span style="font-size:10px;color:var(--ink4);font-family:'Inter',sans-serif">lub data:</span>
+      <input type="date" class="spick-date" onchange="bulkSetAll('${oid}','deliveryDate',this.value);renderAll()" oninput="bulkSetAll('${oid}','deliveryDate',this.value);renderAll()">
+    </div>
+    <div class="bulk-status-toggle">
+      <button class="baw" onclick="bulkSetAll('${oid}','status','wolne')" title="Wszystkie Wolne">W</button>
+      <button class="baz" onclick="bulkSetAll('${oid}','status','zarezerwowane')" title="Wszystkie Zarezerwowane">Z</button>
+    </div>
+  </div>`;
+}
+
 function contPanel(o){
   const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
-  let h=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
+  let h=bulkBarHtml(o.id, n);
+  h+=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
   for(let i=0;i<n;i++){
     const c=o.containers[i],cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
@@ -1246,7 +1290,8 @@ function delDateToggleExp(oid,dateKey){
 
 function contPanelSlots(o,slots){
   const cap=getCap(o.power||parsePower(o.desc)),n=getCCount(o);
-  let h=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
+  let h=bulkBarHtml(o.id, n);
+  h+=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
   slots.forEach(s=>{
     const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
