@@ -831,8 +831,8 @@ function syncContainers(o){
 function isAllWolne(o){syncContainers(o);return o.containers.every(c=>c.status==='wolne');}
 
 /* ════ SUPABASE ════ */
-const SUPA_URL='https://jbocmpjqmyaiurjdeeer.supabase.co';
-const SUPA_KEY='sb_publishable_ZJtN-t-Yn2ndkDhzoeyGYQ_LqCUQKEv';
+const SUPA_URL='https://dpfioxqmpkewiwtyazs.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZmlveHhxbXBrZXdpd3R5YXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDIyMzgsImV4cCI6MjA5Mjg3ODIzOH0.JN5yKyl2PUe7hGDMgLW-pBUEISY-s43-ACQfRub2_ks';
 let supa=null;
 try{
   supa=supabase.createClient(SUPA_URL,SUPA_KEY);
@@ -851,10 +851,16 @@ function syncStatus(state,msg){
 }
 
 async function loadOrders(){
+  // Zawsze załaduj z localStorage jako punkt startowy
+  try{
+    const local=localStorage.getItem('gaia-solar-v4');
+    if(local){orders=JSON.parse(local);console.log('📱 Dane z localStorage:',orders.length,'zamówień');}
+  }catch(e){}
+
   if(!supa){
-    console.error('Supabase not available');
-    syncStatus('err','brak połączenia');
-    orders=DEFAULT_ORDERS.map(o=>({...o}));
+    console.error('Supabase not available — tryb offline');
+    syncStatus('err','tryb offline');
+    if(!orders||!orders.length) orders=DEFAULT_ORDERS.map(o=>({...o}));
     orders.forEach(o=>{if(!o.power)o.power=parsePower(o.desc);if(!o.producent)o.producent='';if(!o.zaliczka)o.zaliczka='nie';syncContainers(o);});
     renderAll();
     return;
@@ -866,20 +872,31 @@ async function loadOrders(){
     if(error&&error.code!=='PGRST116') throw error;
     const raw=data?.data;
     console.log('📦 Raw data from DB:',raw);
-    orders=Array.isArray(raw)&&raw.length?raw:null;
-    if(!orders){
-    // Baza pusta — załaduj dane domyślne i zapisz do Supabase
-    orders=DEFAULT_ORDERS.map(o=>({...o}));
-    console.log('📝 Baza pusta — zapisuję dane domyślne do Supabase…');
-    try{
-      await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
-      console.log('✅ Dane domyślne zapisane do Supabase');
-    }catch(e){console.warn('Nie udało się zapisać defaults:',e);}
-  }
+    if(Array.isArray(raw)&&raw.length){
+      orders=raw;
+      // Zapisz też lokalnie jako backup
+      try{localStorage.setItem('gaia-solar-v4',JSON.stringify(orders));}catch(e){}
+    } else if(!orders||!orders.length){
+      // Baza pusta i brak lokalnych — użyj domyślnych
+      orders=DEFAULT_ORDERS.map(o=>({...o}));
+      console.log('📝 Baza pusta — zapisuję dane domyślne…');
+      try{
+        await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
+        console.log('✅ Dane domyślne zapisane do Supabase');
+      }catch(e){console.warn('Nie udało się zapisać defaults:',e);}
+    }
+    // Jeśli mamy lokalne dane ale baza jest pusta — wyślij lokalne do bazy
+    else if(orders&&orders.length&&(!Array.isArray(raw)||!raw.length)){
+      console.log('📤 Wysyłam lokalne dane do Supabase…');
+      try{
+        await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
+      }catch(e){console.warn(e);}
+    }
   }catch(e){
     console.error('❌ Load error:',e);
-    orders=DEFAULT_ORDERS.map(o=>({...o}));
-    syncStatus('err','błąd: '+e.message);
+    syncStatus('err','błąd połączenia — tryb offline');
+    toast('⚠️ Supabase niedostępny — dane lokalne');
+    if(!orders||!orders.length) orders=DEFAULT_ORDERS.map(o=>({...o}));
   }
   orders.forEach(o=>{
     if(!o.power)o.power=parsePower(o.desc);
@@ -893,6 +910,9 @@ async function loadOrders(){
 }
 
 async function saveData(){
+  // Zawsze zapisz lokalnie
+  try{localStorage.setItem('gaia-solar-v4',JSON.stringify(orders));}catch(e){}
+
   if(!supa||_saving)return;_saving=true;
   syncStatus('syncing','zapisywanie…');
   try{
@@ -901,8 +921,8 @@ async function saveData(){
     syncStatus('ok','zapisano ✓');
   }catch(e){
     console.error('❌ Save error:',e);
-    syncStatus('err','błąd zapisu');
-    toast('⚠️ Błąd zapisu — sprawdź połączenie');
+    syncStatus('err','błąd zapisu — dane zapisane lokalnie');
+    toast('⚠️ Błąd Supabase — dane zapisane lokalnie');
   }finally{_saving=false;}
 }
 
