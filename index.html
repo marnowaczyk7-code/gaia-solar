@@ -232,6 +232,39 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 }
 .cont-date{border:1.5px solid var(--border);border-radius:7px;padding:4px 7px;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);background:var(--paper);outline:none;width:100%;transition:.15s;}
 .cont-date:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+
+/* ── STOCK PICKER ── */
+.stock-picker{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.spick-btn{
+  padding:3px 9px;border-radius:6px;border:1.5px solid var(--border);
+  font-family:'Inter',sans-serif;font-size:10px;font-weight:700;cursor:pointer;
+  background:var(--paper2);color:var(--ink4);transition:all .15s;white-space:nowrap;
+}
+.spick-btn:hover{border-color:var(--ink4);color:var(--ink2)}
+.spick-btn.active-rtd{background:#EFF6FF;border-color:#3B82F6;color:#1D4ED8}
+.spick-btn.active-chiny{background:#FFF7ED;border-color:#F97316;color:#C2410C}
+.spick-btn.active-date{background:var(--gold2);border-color:var(--gold);color:var(--gold-dk)}
+.spick-date{
+  border:1.5px solid var(--gold);border-radius:7px;padding:3px 7px;
+  font-family:'Inter',sans-serif;font-size:11px;color:var(--ink);
+  background:var(--paper);outline:none;transition:.15s;
+}
+.spick-date:focus{box-shadow:0 0 0 3px var(--gold2)}
+
+/* ── STOCK SECTION BADGES ── */
+.stock-section-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:8px;font-size:11px;font-weight:700;
+  font-family:'Inter',sans-serif;letter-spacing:.03em;
+}
+.ssb-rtd{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1D4ED8}
+.ssb-chiny{background:#FFF7ED;border:1.5px solid #FED7AA;color:#C2410C}
+.cont-del-badge{
+  display:inline-flex;padding:2px 8px;border-radius:5px;
+  font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;
+}
+.cdb-rtd{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.cdb-chiny{background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA}
 .cont-row:last-child{border-bottom:none}
 .cont-row:hover{background:rgba(255,255,255,.7)}
 .cont-num{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--ink2)}
@@ -628,135 +661,9 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
           <th></th>
         </tr>
       </thead>
-      <tbody id="tbl-body"><tr class="mrow">
-      <td><button class="xbtn" onclick="toggleExp('7')"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003122</td>
-      <td><div class="td-model">AIKO-A-MAH54 DB 460W</div><div class="td-desc">460、+、S - Black on Black、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">4810</td>
-      <td><span class="kont-badge" onclick="toggleExp('7')">5</span></td>
-      <td class="td-num">0,128</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">283&nbsp;212,80</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-06-22<div style="font-size:9px;color:var(--text3);margin-top:2px">CIF</div></td>
-      <td><span class="port-badge pg">Gdańsk</span></td>
-      <td><span class="cs-sum cs-wolne" onclick="toggleExp('7')"><span class="cs-dot" style="background:var(--green);box-shadow:0 0 6px var(--green-glow)"></span>wszystkie wolne</span></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('7','tak')" class="">TAK</button><button onclick="setZaliczka('7','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('7')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('7')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003124</td>
-      <td><div class="td-model">AIKO-A-MAH60 MB 505W</div><div class="td-desc">505、-、S - Black on Black、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">888</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,121</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">54&nbsp;261,24</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-06-22<div style="font-size:9px;color:var(--text3);margin-top:2px">CIF</div></td>
-      <td><span class="port-badge pg">Gdańsk</span></td>
-      <td><div class="stoggle"><button onclick="setCont('9',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('9',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('9','tak')" class="">TAK</button><button onclick="setZaliczka('9','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('9')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('9')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003127</td>
-      <td><div class="td-model">AIKO-A-MAH54 MB 450W</div><div class="td-desc">450、-、S - Black on Black、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">962</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,121</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">52&nbsp;380,90</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-06-22<div style="font-size:9px;color:var(--text3);margin-top:2px">CIF</div></td>
-      <td><span class="port-badge pg">Gdańsk</span></td>
-      <td><div class="stoggle"><button onclick="setCont('8',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('8',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('8','tak')" class="">TAK</button><button onclick="setZaliczka('8','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('8')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('8')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003438</td>
-      <td><div class="td-model">AIKO-A-MAH54 DW 465W</div><div class="td-desc">465、+、P - Black on White、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">386</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,121</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">21&nbsp;718,29</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-05-15<div style="font-size:9px;color:var(--text3);margin-top:2px">FCA</div></td>
-      <td><span class="port-badge pr">Rotterdam</span></td>
-      <td><div class="stoggle"><button onclick="setCont('4',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('4',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('4','tak')" class="">TAK</button><button onclick="setZaliczka('4','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('4')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('4')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003440</td>
-      <td><div class="td-model">AIKO-A-MCE54DW 480W</div><div class="td-desc">480、+、P - Black on White、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">911</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,129</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">56&nbsp;409,12</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-05-15<div style="font-size:9px;color:var(--text3);margin-top:2px">FCA</div></td>
-      <td><span class="port-badge pr">Rotterdam</span></td>
-      <td><div class="stoggle"><button onclick="setCont('1',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('1',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('1','tak')" class="">TAK</button><button onclick="setZaliczka('1','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('1')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('1')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003441</td>
-      <td><div class="td-model">AIKO-A-MCE54DW 475W</div><div class="td-desc">475、+、P - Black on White、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">407</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,125</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">24&nbsp;165,62</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-05-15<div style="font-size:9px;color:var(--text3);margin-top:2px">FCA</div></td>
-      <td><span class="port-badge pr">Rotterdam</span></td>
-      <td><div class="stoggle"><button onclick="setCont('2',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('2',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('2','tak')" class="">TAK</button><button onclick="setZaliczka('2','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('2')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('2')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003442</td>
-      <td><div class="td-model">AIKO-A-MCE54DW 480W</div><div class="td-desc">480、+、P - Black on White、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">222</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,127</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">13&nbsp;533,12</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-05-15<div style="font-size:9px;color:var(--text3);margin-top:2px">FCA</div></td>
-      <td><span class="port-badge pr">Rotterdam</span></td>
-      <td><div class="stoggle"><button onclick="setCont('3',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('3',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('3','tak')" class="">TAK</button><button onclick="setZaliczka('3','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('3')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('3')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003443</td>
-      <td><div class="td-model">AIKO-A-MAH60 MW 515W</div><div class="td-desc">515、-、P - Black on White、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">666</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,123</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">42&nbsp;187,77</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-05-15<div style="font-size:9px;color:var(--text3);margin-top:2px">FCA</div></td>
-      <td><span class="port-badge pr">Rotterdam</span></td>
-      <td><div class="stoggle"><button onclick="setCont('5',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('5',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('5','tak')" class="">TAK</button><button onclick="setZaliczka('5','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('5')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('5')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr><tr class="mrow">
-      <td><span class="no-xbtn"></span></td>
-      <td class="td-producer">Aiko</td>
-      <td class="td-nlm">NLMSC2026003444</td>
-      <td><div class="td-model">AIKO-A-MAH60 MW 520W</div><div class="td-desc">520、-、P - Black on White、1200</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--text)">444</td>
-      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)">1</span></td>
-      <td class="td-num">0,123</td>
-      <td class="td-num" style="font-weight:700;color:var(--blue)">28&nbsp;398,24</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);white-space:nowrap">2026-05-15<div style="font-size:9px;color:var(--text3);margin-top:2px">FCA</div></td>
-      <td><span class="port-badge pr">Rotterdam</span></td>
-      <td><div class="stoggle"><button onclick="setCont('6',0,'status','wolne')" class="aw">Wolne</button><button onclick="setCont('6',0,'status','zarezerwowane')" class="">Zarezerwowane</button></div></td>
-      <td><div class="ztoggle"><button onclick="setZaliczka('6','tak')" class="">TAK</button><button onclick="setZaliczka('6','nie')" class="anie">NIE</button></div></td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('6')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"></path></svg></button><button class="ibtn del" onclick="confirmDel('6')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path></svg></button></td>
-    </tr></tbody>
+      <tbody id="tbl-body"></tbody>
     </table>
-    <div class="tbl-foot" id="tbl-foot"><div class="tf-item"><div class="tf-label">Wyświetlanych</div><div class="tf-val">9/9</div></div><div class="tf-item"><div class="tf-label">Ilość</div><div class="tf-val">9696 szt.</div></div><div class="tf-item"><div class="tf-label">Kontenery</div><div class="tf-val">13</div></div><div class="tf-item"><div class="tf-label">Wartość</div><div class="tf-val">576&nbsp;267,10 €</div></div></div>
+    <div class="tbl-foot" id="tbl-foot"></div>
   </div>
 </div>
 
@@ -878,7 +785,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 
 </div><!-- /#app -->
 
-<script src="Gaia%20Solar%20%E2%80%94%20Zarz%C4%85dzanie%20zam%C3%B3wieniami_files/pdf.min.js"></script>
+<script>/* pdf.min.js removed - import PDF uses text paste */</script>
 <script>
 /* ════════════════════════════════════════════
    DATA
@@ -959,7 +866,16 @@ async function loadOrders(){
     if(error&&error.code!=='PGRST116') throw error;
     const raw=data?.data;
     console.log('📦 Raw data from DB:',raw);
-    orders=Array.isArray(raw)&&raw.length?raw:DEFAULT_ORDERS.map(o=>({...o}));
+    orders=Array.isArray(raw)&&raw.length?raw:null;
+    if(!orders){
+    // Baza pusta — załaduj dane domyślne i zapisz do Supabase
+    orders=DEFAULT_ORDERS.map(o=>({...o}));
+    console.log('📝 Baza pusta — zapisuję dane domyślne do Supabase…');
+    try{
+      await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
+      console.log('✅ Dane domyślne zapisane do Supabase');
+    }catch(e){console.warn('Nie udało się zapisać defaults:',e);}
+  }
   }catch(e){
     console.error('❌ Load error:',e);
     orders=DEFAULT_ORDERS.map(o=>({...o}));
@@ -1067,13 +983,43 @@ function sumBadge(o,fn){
   const lbl=z===0?'wszystkie wolne':w===0?'wszystkie zarez.':w+'W / '+z+'Z';
   return `<span class="cs-sum ${cls}" onclick="${fn}"><span class="cs-dot" style="background:${dot}${z===0?';box-shadow:0 0 6px var(--green-glow)':w===0?';box-shadow:0 0 6px var(--amber-glow)':''}"></span>${lbl}</span>`;
 }
+function stockPickerHtml(oid, idx, cDate, changeFn){
+  const isRTD = cDate==='STOCK_RTD';
+  const isChiny = cDate==='STOCK_CHINY';
+  const isDate = !isRTD && !isChiny;
+  return `<div class="stock-picker">
+    <button class="spick-btn${isRTD?' active-rtd':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_RTD')">📦 Stock RTD</button>
+    <button class="spick-btn${isChiny?' active-chiny':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_CHINY')">🚢 Stock Chiny</button>
+    <button class="spick-btn${isDate&&cDate?' active-date':''}" onclick="showDateInput('${oid}',${idx},'${changeFn}')">📅 Data</button>
+    ${isDate?`<input type="date" class="spick-date" value="${cDate||''}" onchange="${changeFn}('${oid}',${idx},'deliveryDate',this.value)" oninput="${changeFn}('${oid}',${idx},'deliveryDate',this.value)">`:``}
+  </div>`;
+}
+
+function showDateInput(oid, idx, fn){
+  // Clear stock value and set empty date to show the date picker
+  const setter = fn==='setContDel'?setContDel:setCont;
+  setter(oid, idx, 'deliveryDate', '');
+}
+
+function deliveryDateLabel(d){
+  if(d==='STOCK_RTD') return `<span class="cont-del-badge cdb-rtd">📦 Stock RTD</span>`;
+  if(d==='STOCK_CHINY') return `<span class="cont-del-badge cdb-chiny">🚢 Stock Chiny</span>`;
+  return d||'—';
+}
+
 function contPanel(o){
   const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
   let h=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
   for(let i=0;i<n;i++){
     const c=o.containers[i],cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row"><div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--text3)">(niekompletny)</small>':''}</div><div class="cont-qty-cell">${fmt(cq,0)}</div><div><input type="date" class="cont-date" value="${cDate}" title="Data dostawy tego kontenera" oninput="setContDebounced('${o.id}',${i},'deliveryDate',this.value)" onchange="setCont('${o.id}',${i},'deliveryDate',this.value)"></div><div>${stToggle(o.id,i,c.status)}</div><div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)"></div></div>`;
+    h+=`<div class="cont-row">
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
+      <div class="cont-qty-cell">${fmt(cq,0)}</div>
+      <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
+      <div>${stToggle(o.id,i,c.status)}</div>
+      <div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)"></div>
+    </div>`;
   }
   return h;
 }
@@ -1136,12 +1082,10 @@ function getContainerSlots(){
     syncContainers(o);
     const n=getCCount(o);
     if(n<=1){
-      // single container — use order date
       const date=(o.containers[0]?.deliveryDate)||o.deliveryDate||'';
       if(!filterDelPort||o.port===filterDelPort)
         slots.push({order:o,contIdx:0,deliveryDate:date,qty:o.qty,total:n});
     } else {
-      // multiple containers — each may have own date
       for(let i=0;i<n;i++){
         const c=o.containers[i];
         const date=c.deliveryDate||o.deliveryDate||'';
@@ -1150,6 +1094,7 @@ function getContainerSlots(){
       }
     }
   });
+  // Include stock slots (STOCK_RTD, STOCK_CHINY) and dated slots; exclude empty
   return slots.filter(s=>s.deliveryDate);
 }
 
@@ -1158,87 +1103,139 @@ function renderDeliveries(){
   const el=document.getElementById('del-content');
   if(!slots.length){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--ink4);font-size:13px">Brak zamówień z datą dostawy</div>';return;}
 
-  // Group by month → date → [slots]
+  // Separate stock slots from dated slots
+  const stockRTD  = slots.filter(s=>s.deliveryDate==='STOCK_RTD');
+  const stockChiny= slots.filter(s=>s.deliveryDate==='STOCK_CHINY');
+  const dated     = slots.filter(s=>s.deliveryDate!=='STOCK_RTD'&&s.deliveryDate!=='STOCK_CHINY');
+
+  let html='';
+
+  // ── STOCK RTD ──
+  if(stockRTD.length){
+    html+=renderStockSection('STOCK_RTD','📦 Stock RTD','ssb-rtd','#3B82F6',stockRTD);
+  }
+  // ── STOCK CHINY ──
+  if(stockChiny.length){
+    html+=renderStockSection('STOCK_CHINY','🚢 Stock Chiny','ssb-chiny','#F97316',stockChiny);
+  }
+
+  // ── DATED DELIVERIES ──
   const byM={};
-  slots.forEach(s=>{
+  dated.forEach(s=>{
     const mk=s.deliveryDate.slice(0,7);
     if(!byM[mk])byM[mk]=[];
     byM[mk].push(s);
   });
 
-  let html='';
   Object.keys(byM).sort().forEach(mk=>{
     const[y,m]=mk.split('-'),title=PLM[parseInt(m)-1]+' '+y;
     const mSlots=byM[mk].sort((a,b)=>a.deliveryDate.localeCompare(b.deliveryDate));
-    // month totals: unique orders, total containers, qty, value
     const uniqueOrders=new Set(mSlots.map(s=>s.order.id));
     const tQ=mSlots.reduce((s,x)=>s+x.qty,0);
     const tA=[...uniqueOrders].reduce((s,id)=>{const o=orders.find(x=>x.id===id);return s+(o?o.amount:0);},0);
     const wC=mSlots.filter(s=>s.order.containers[s.contIdx]?.status==='wolne').length;
     const zC=mSlots.filter(s=>s.order.containers[s.contIdx]?.status==='zarezerwowane').length;
-
     const byD={};
     mSlots.forEach(s=>{if(!byD[s.deliveryDate])byD[s.deliveryDate]=[];byD[s.deliveryDate].push(s);});
 
     html+=`<div class="month-section"><div class="month-hdr"><div class="month-title">${title}</div><div class="month-divider"></div><div class="month-stats"><span class="ms-pill ms-total">${mSlots.length} kont. · ${uniqueOrders.size} zam.</span><span class="ms-pill ms-total">${fmt(tQ,0)} szt.</span><span class="ms-pill ms-value">${fmt(tA,0)} €</span>${wC?`<span class="ms-pill ms-green">${wC} wolnych</span>`:''}${zC?`<span class="ms-pill ms-amber">${zC} zarezerwowanych</span>`:''}</div></div>`;
 
     Object.keys(byD).sort().forEach(date=>{
-      const dSlots=byD[date];
-      const fD=new Date(date).toLocaleDateString('pl-PL',{day:'numeric',month:'long',year:'numeric'});
-
-      // Group slots by order within this date
-      const orderMap={};
-      dSlots.forEach(s=>{
-        if(!orderMap[s.order.id])orderMap[s.order.id]=[];
-        orderMap[s.order.id].push(s);
-      });
-
-      html+=`<div class="date-group"><div class="date-label"><span class="date-label-dot"></span>${fD}</div>`;
-
-      Object.values(orderMap).forEach(oSlots=>{
-        const o=oSlots[0].order;
-        const isMultiCont=oSlots[0].total>1;
-        const isExp=delExpanded.has(o.id+'-'+date);
-        const zal=o.zaliczka==='tak';
-        const allW=oSlots.every(s=>o.containers[s.contIdx]?.status==='wolne');
-        const allZ=oSlots.every(s=>o.containers[s.contIdx]?.status==='zarezerwowane');
-        const wN=oSlots.filter(s=>o.containers[s.contIdx]?.status==='wolne').length;
-        const zN=oSlots.length-wN;
-
-        let sBdg;
-        if(oSlots.length===1){
-          const c=o.containers[oSlots[0].contIdx];
-          sBdg=stToggle(o.id,oSlots[0].contIdx,c?.status||'wolne');
-        } else {
-          let cls='cs-mixed',dot='#475569';
-          if(zN===0){cls='cs-wolne';dot='var(--green)';}else if(wN===0){cls='cs-zar';dot='var(--amber)';}
-          const lbl=zN===0?'wszystkie wolne':wN===0?'wszystkie zarez.':wN+'W / '+zN+'Z';
-          sBdg=`<span class="cs-sum ${cls}" onclick="delDateToggleExp('${o.id}','${date}')"><span class="cs-dot" style="background:${dot}"></span>${lbl}</span>`;
-        }
-
-        const dCardId=`dcard-${o.id}-${date.replace(/-/g,'')}`;
-        const slotQty=oSlots.reduce((s,x)=>s+x.qty,0);
-        const contLabel=oSlots.length===1?`Kont. ${oSlots[0].contIdx+1}/${oSlots[0].total}`:`${oSlots.length} kont. tego dnia`;
-
-        html+=`<div class="del-card${isExp?' exp':''} ${o.port==='Rotterdam'?'port-rtd':o.port==='Gdańsk'?'port-gda':''}" id="${dCardId}">
-          <div class="del-card-main" onclick="delDateToggleExp('${o.id}','${date}')">
-            <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
-            <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div></div>
-            <div class="dc-num" style="font-weight:700;color:var(--ink)">${fmt(slotQty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
-            <div><span class="dc-cont-label">${contLabel}</span></div>
-            <div>${sBdg}</div>
-            <div style="display:flex;flex-direction:column;gap:4px"><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span>${zal?'<span class="zaliczka-tag">ZALICZKA ✓</span>':''}</div>
-            <div class="dc-num" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
-            <div class="dc-arrow"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          </div>
-          <div class="del-panel"><div class="cpanel">${contPanelSlots(o,oSlots)}</div></div>
-        </div>`;
-      });
-      html+='</div>';
+      html+=renderDateGroup(date, byD[date]);
     });
     html+='</div>';
   });
+
   el.innerHTML=html;
+}
+
+function renderStockSection(type, label, badgeCls, dotColor, slots){
+  const tQ=slots.reduce((s,x)=>s+x.qty,0);
+  const wC=slots.filter(s=>s.order.containers[s.contIdx]?.status==='wolne').length;
+  const zC=slots.length-wC;
+  const byOrder={};
+  slots.forEach(s=>{if(!byOrder[s.order.id])byOrder[s.order.id]=[];byOrder[s.order.id].push(s);});
+
+  let html=`<div class="month-section">
+    <div class="month-hdr">
+      <div class="month-title" style="display:flex;align-items:center;gap:10px">
+        <span class="stock-section-badge ${badgeCls}">${label}</span>
+      </div>
+      <div class="month-divider"></div>
+      <div class="month-stats">
+        <span class="ms-pill ms-total">${slots.length} kont.</span>
+        <span class="ms-pill ms-total">${fmt(tQ,0)} szt.</span>
+        ${wC?`<span class="ms-pill ms-green">${wC} wolnych</span>`:''}
+        ${zC?`<span class="ms-pill ms-amber">${zC} zarezerwowanych</span>`:''}
+      </div>
+    </div>
+    <div class="date-group">`;
+
+  Object.values(byOrder).forEach(oSlots=>{
+    html+=renderDeliveryCard(oSlots, type);
+  });
+  html+=`</div></div>`;
+  return html;
+}
+
+function renderDateGroup(date, slots){
+  const fD=new Date(date).toLocaleDateString('pl-PL',{day:'numeric',month:'long',year:'numeric'});
+  const byOrder={};
+  slots.forEach(s=>{if(!byOrder[s.order.id])byOrder[s.order.id]=[];byOrder[s.order.id].push(s);});
+  let html=`<div class="date-group"><div class="date-label"><span class="date-label-dot"></span>${fD}</div>`;
+  Object.values(byOrder).forEach(oSlots=>{
+    html+=renderDeliveryCard(oSlots, date);
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderDeliveryCard(oSlots, dateKey){
+  const o=oSlots[0].order;
+  const isExp=delExpanded.has(o.id+'-'+dateKey);
+  const zal=o.zaliczka==='tak';
+  const wN=oSlots.filter(s=>o.containers[s.contIdx]?.status==='wolne').length;
+  const zN=oSlots.length-wN;
+
+  let sBdg;
+  if(oSlots.length===1){
+    const c=o.containers[oSlots[0].contIdx];
+    sBdg=stToggle(o.id,oSlots[0].contIdx,c?.status||'wolne');
+  } else {
+    let cls='cs-mixed',dot='#475569';
+    if(zN===0){cls='cs-wolne';dot='var(--green)';}else if(wN===0){cls='cs-zar';dot='var(--amber)';}
+    const lbl=zN===0?'wszystkie wolne':wN===0?'wszystkie zarez.':wN+'W / '+zN+'Z';
+    sBdg=`<span class="cs-sum ${cls}" onclick="delDateToggleExp('${o.id}','${dateKey}')"><span class="cs-dot" style="background:${dot}"></span>${lbl}</span>`;
+  }
+
+  const dCardId=`dcard-${o.id}-${dateKey.replace(/[^a-z0-9]/gi,'')}`;
+  const slotQty=oSlots.reduce((s,x)=>s+x.qty,0);
+  const contLabel=oSlots.length===1?`Kont. ${oSlots[0].contIdx+1}/${oSlots[0].total}`:`${oSlots.length} kont.`;
+
+  return `<div class="del-card${isExp?' exp':''} ${o.port==='Rotterdam'?'port-rtd':o.port==='Gdańsk'?'port-gda':''}" id="${dCardId}">
+    <div class="del-card-main" onclick="delDateToggleExp('${o.id}','${dateKey}')">
+      <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
+      <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div></div>
+      <div class="dc-num" style="font-weight:700;color:var(--ink)">${fmt(slotQty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
+      <div><span class="dc-cont-label">${contLabel}</span></div>
+      <div>${sBdg}</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span>
+        ${zal?'<span class="zaliczka-tag">ZALICZKA ✓</span>':''}
+      </div>
+      <div class="dc-num" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+      <div class="dc-arrow"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="del-panel"><div class="cpanel">${contPanelSlots(o,oSlots)}</div></div>
+  </div>`;
+}
+
+function delDateToggleExp(oid,dateKey){
+  const key=oid+'-'+dateKey;
+  if(delExpanded.has(key))delExpanded.delete(key);else delExpanded.add(key);
+  const cardId=`dcard-${oid}-${dateKey.replace(/[^a-z0-9]/gi,'')}`;
+  const card=document.getElementById(cardId);
+  if(card) card.classList.toggle('exp',delExpanded.has(key));
 }
 
 function contPanelSlots(o,slots){
@@ -1247,21 +1244,17 @@ function contPanelSlots(o,slots){
   slots.forEach(s=>{
     const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row"><div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div><div class="cont-qty-cell">${fmt(cq,0)}</div><div><input type="date" class="cont-date" value="${cDate}" oninput="setContDebounced('${o.id}',${i},'deliveryDate',this.value)" onchange="setContDel('${o.id}',${i},'deliveryDate',this.value)"></div><div>${stToggle(o.id,i,c.status)}</div><div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)"></div></div>`;
+    h+=`<div class="cont-row">
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
+      <div class="cont-qty-cell">${fmt(cq,0)}</div>
+      <div>${stockPickerHtml(o.id,i,cDate,'setContDel')}</div>
+      <div>${stToggle(o.id,i,c.status)}</div>
+      <div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)"></div>
+    </div>`;
   });
   return h;
 }
 
-function delDateToggleExp(oid,date){
-  const key=oid+'-'+date;
-  if(delExpanded.has(key))delExpanded.delete(key);else delExpanded.add(key);
-  const isExp=delExpanded.has(key);
-  const cardId=`dcard-${oid}-${date.replace(/-/g,'')}`;
-  const card=document.getElementById(cardId);
-  if(card){
-    card.classList.toggle('exp',isExp);
-  }
-}
 function setContDel(oid,idx,f,v){
   setCont(oid,idx,f,v,true);
 }
@@ -1271,13 +1264,17 @@ function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add
 const debT={};
 function setContDebounced(oid,idx,f,v){clearTimeout(debT[oid+idx+f]);debT[oid+idx+f]=setTimeout(()=>setCont(oid,idx,f,v,true),600);}
 function setCont(oid,idx,f,v,silent=false){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;
   syncContainers(o);if(!o.containers[idx])return;
   o.containers[idx][f]=v;if(getCCount(o)===1)o.status=o.containers[0].status;
   saveData();
   if(!silent){renderAll();}else{renderStats();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
 }
-function setZaliczka(oid,v){const o=orders.find(x=>x.id===oid);if(!o)return;o.zaliczka=v;saveData();renderAll();toast('Zaliczka zaktualizowana ✓');}
+function setZaliczka(oid,v){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;o.zaliczka=v;saveData();renderAll();toast('Zaliczka zaktualizowana ✓');
+}
 function renderAll(){renderStats();renderTable();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
 
 /* ════ MODAL ════ */
@@ -1295,6 +1292,7 @@ function calcAmt(){
 function selStatus(s){modalStatus=s;document.getElementById('sopt-w').className='sopt'+(s==='wolne'?' sw':'');document.getElementById('sopt-z').className='sopt'+(s==='zarezerwowane'?' sz':'');}
 function selZaliczka(v){modalZaliczka=v;document.getElementById('sopt-tak').className='sopt'+(v==='tak'?' stak':'');document.getElementById('sopt-nie').className='sopt'+(v==='nie'?' snie':'');}
 function openModal(id=null){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   editingId=id;
   const mo=id?orders.find(o=>o.id===id):null;
   document.getElementById('modal-title').textContent=id?'Edytuj zamówienie':'Nowe zamówienie';
@@ -1318,6 +1316,7 @@ function saveOrder(){
 
 /* ════ DELETE ════ */
 function confirmDel(id){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   deleteTarget=id;
   const o=orders.find(x=>x.id===id);
   document.getElementById('confirm-msg').textContent=`Zamówienie ${o?.nlm||id} (${getCCount(o)} kont.) zostanie trwale usunięte.`;
@@ -1328,7 +1327,7 @@ function closeConfirm(){document.getElementById('confirm-ovl').classList.remove(
 
 /* ════ PDF IMPORT ════ */
 let parsedData=null;
-function openImport(){document.getElementById('import-ovl').classList.add('open');resetImport();}
+function openImport(){if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}document.getElementById('import-ovl').classList.add('open');resetImport();}
 function closeImport(){document.getElementById('import-ovl').classList.remove('open');}
 
 function switchImportTab(tab){
@@ -1678,56 +1677,34 @@ let toastT;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);}
 
 /* ════ INIT ════ */
-const now=new Date();
-document.getElementById('hdr-date').innerHTML=now.toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br>'+now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+(function(){
+  // Zegar
+  const now=new Date();
+  const hdrDate=document.getElementById('hdr-date');
+  if(hdrDate) hdrDate.innerHTML=now.toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br>'+now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
 
-/* ── TRYB ADMIN / PODGLĄD ── */
-const ADMIN_PASSWORD = 'gaia2026';
-const params = new URLSearchParams(window.location.search);
-const isAdmin = params.get('admin') === ADMIN_PASSWORD;
+  // Tryb admin / podgląd
+  const ADMIN_PASSWORD='gaia2026';
+  const params=new URLSearchParams(window.location.search);
+  window.isAdmin=params.get('admin')===ADMIN_PASSWORD;
 
-const modeBadge = document.getElementById('mode-badge');
-const hdrActions = document.getElementById('hdr-actions');
+  const modeBadge=document.getElementById('mode-badge');
+  const hdrActions=document.getElementById('hdr-actions');
+  if(modeBadge){
+    modeBadge.style.display='block';
+    if(window.isAdmin){
+      modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(213,161,111,.2);color:#D5A16F;border:1px solid rgba(213,161,111,.3)';
+      modeBadge.textContent='✏️ ADMIN';
+    } else {
+      if(hdrActions) hdrActions.style.display='none';
+      modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.25)';
+      modeBadge.textContent='👁 PODGLĄD';
+    }
+  }
 
-if(isAdmin){
-  modeBadge.style.display = 'block';
-  modeBadge.style.background = 'rgba(213,161,111,.2)';
-  modeBadge.style.color = '#D5A16F';
-  modeBadge.style.border = '1px solid rgba(213,161,111,.3)';
-  modeBadge.textContent = '✏️ TRYB ADMINA';
-} else {
-  // Tryb podglądu — ukryj przyciski edycji
-  hdrActions.style.display = 'none';
-  modeBadge.style.display = 'block';
-  modeBadge.style.background = 'rgba(16,185,129,.15)';
-  modeBadge.style.color = '#10B981';
-  modeBadge.style.border = '1px solid rgba(16,185,129,.25)';
-  modeBadge.textContent = '👁 PODGLĄD';
-}
-
-/* Blokuj akcje edycji w trybie podglądu */
-function guardAdmin(fn){
-  return function(...args){
-    if(!isAdmin){ toast('🔒 Tylko administrator może edytować dane'); return; }
-    return fn(...args);
-  };
-}
-const _openModal = openModal; openModal = guardAdmin(_openModal);
-const _openImport = openImport; openImport = guardAdmin(_openImport);
-const _saveOrder = saveOrder; saveOrder = guardAdmin(_saveOrder);
-const _confirmDel = confirmDel; confirmDel = guardAdmin(_confirmDel);
-const _setCont = setCont;
-setCont = function(oid,idx,f,v,silent){
-  if(!isAdmin){ toast('🔒 Tylko administrator może edytować dane'); return; }
-  return _setCont(oid,idx,f,v,silent);
-};
-const _setZaliczka = setZaliczka;
-setZaliczka = function(oid,v){
-  if(!isAdmin){ toast('🔒 Tylko administrator może edytować dane'); return; }
-  return _setZaliczka(oid,v);
-};
-
-loadOrders();
+  // Uruchom aplikację — zawsze, niezależnie od błędów powyżej
+  loadOrders();
+})();
 </script>
 
 
