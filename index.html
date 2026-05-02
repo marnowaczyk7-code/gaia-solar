@@ -598,6 +598,10 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
   </div>
   <div id="mode-badge" style="display:none;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.06em;font-family:'Inter',sans-serif"></div>
   <div class="hdr-actions" id="hdr-actions">
+    <button class="hbtn" onclick="loadOrders()" title="Pobierz aktualne dane z serwera">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M13.5 8A5.5 5.5 0 112.5 5M2.5 2v3h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Odśwież
+    </button>
     <button class="hbtn" onclick="openImport()">
       <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4M2 12v2h12v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       Importuj PDF
@@ -927,27 +931,8 @@ async function saveData(){
 }
 
 function startRealtime(){
-  if(!supa)return;
-  supa.channel('orders-sync')
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',filter:`id=eq.${DB_ROW}`},payload=>{
-      const incoming=payload.new?.data;
-      if(!Array.isArray(incoming))return;
-      orders=incoming;
-      orders.forEach(o=>{
-        if(!o.power)o.power=parsePower(o.desc);
-        if(!o.producent)o.producent='';
-        if(!o.zaliczka)o.zaliczka='nie';
-        syncContainers(o);
-      });
-      renderAll();
-      syncStatus('ok','zsynchronizowano');
-      toast('🔄 Dane zaktualizowane');
-    })
-    .subscribe(status=>{
-      console.log('📡 Realtime status:',status);
-      if(status==='SUBSCRIBED')syncStatus('ok','online — live sync');
-      if(status==='CHANNEL_ERROR')syncStatus('err','błąd real-time');
-    });
+  // Realtime wyłączony — odśwież stronę aby zobaczyć zmiany innych użytkowników
+  console.log('ℹ️ Tryb bez real-time — odśwież stronę aby pobrać aktualne dane');
 }
 
 /* ════ TABS ════ */
