@@ -1632,7 +1632,12 @@ function parsePoText(text){
   const t=raw.replace(/[ \t]{2,}/g,' ');
 
   // Nr dokumentu
-  const nlmM=t.match(/NLMSC\d+/i)||t.match(/([A-Z]{1,6}\/\d{3,10}\/\d{2}\/\d{4})/i)||t.match(/Invoice\s*No[.:\s]+([A-Z0-9\/\-]{4,30})/i);
+  const nlmM=
+    t.match(/NLMSC\d+/i)
+    ||t.match(/(?:Supplier\s+PO\s+No\.?\s*[：:]\s*)([A-Z0-9\-\/]{4,30})/i)
+    ||t.match(/(?:PO\s+No\.?\s*[：:]\s*)([A-Z0-9\-\/]{4,30})/i)
+    ||t.match(/([A-Z]{1,6}\/\d{3,10}\/\d{2}\/\d{4})/i)
+    ||t.match(/Invoice\s*No[.:\s：]+([A-Z0-9\/\-]{4,30})/i);
   d.nlm=nlmM?(nlmM[1]||nlmM[0]).trim():'—';
 
   // Producent
