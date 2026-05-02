@@ -1628,102 +1628,99 @@ function unescapePdf(s){
 }
 function parsePoText(text){
   const d={};
-  // Normalizacja
-  const t=text.replace(/\r/g,'\n').replace(/[ \t]{2,}/g,' ');
+  const raw=text.replace(/\r/g,'\n');
+  const t=raw.replace(/[ \t]{2,}/g,' ');
 
-  // ══ Nr dokumentu ══
-  const nlmM=
-    t.match(/NLMSC\d+/i)
-    ||t.match(/([A-Z]{1,6}\/\d{3,10}\/\d{2}\/\d{4})/i)
-    ||t.match(/Invoice\s*(?:No\.?)?[:\s]+([A-Z0-9][A-Z0-9\/\-]{3,30})/i);
+  // Nr dokumentu
+  const nlmM=t.match(/NLMSC\d+/i)||t.match(/([A-Z]{1,6}\/\d{3,10}\/\d{2}\/\d{4})/i)||t.match(/Invoice\s*No[.:\s]+([A-Z0-9\/\-]{4,30})/i);
   d.nlm=nlmM?(nlmM[1]||nlmM[0]).trim():'—';
 
-  // ══ Producent ══
-  const brands=[
-    ['Aiko',/\baiko\b/i],['JA Solar',/\bja[\s-]solar\b/i],['Jinko',/\bjinko\b/i],
-    ['Longi',/\blongi\b/i],['Canadian Solar',/\bcanadian\s*solar\b/i],
-    ['Trina',/\btrina\b/i],['Risen',/\brisen\b/i],['Q Cells',/\bq[\s.]?cells?\b/i],
-  ];
+  // Producent
+  const brands=[['Aiko',/\baiko\b/i],['JA Solar',/\bja[\s-]solar\b/i],['Jinko',/\bjinko\b/i],['Longi',/\blongi\b/i],['Canadian Solar',/\bcanadian\s*solar\b/i],['Trina',/\btrina\b/i],['Risen',/\brisen\b/i],['Q Cells',/\bq[\s.]?cells?\b/i]];
   d.producent='';
   for(const[name,re] of brands){if(re.test(t)){d.producent=name;break;}}
 
-  // ══ Daty ══
-  const dates=t.match(/\d{4}-\d{2}-\d{2}/g)||[];
-  if(dates[0])d.date=dates[0];
-  const crdM=t.match(/(?:Delivery\s*(?:Date|date)|CRD|Termin\s+dostawy)[:\s]*(\d{4}-\d{2}-\d{2})/i);
-  if(crdM&&crdM[1]!==d.date)d.deliveryDate=crdM[1];
+  // Daty — obsługa YYYY/MM/DD i YYYY-MM-DD
+  const dateNorm=s=>s.replace(/\//g,'-');
+  const allDates=(t.match(/\d{4}[-\/]\d{2}[-\/]\d{2}/g)||[]).map(dateNorm);
+  if(allDates[0])d.date=allDates[0];
+  const crdM=t.match(/(?:Requested\s+Delivery\s+Date|Delivery\s+Date|CRD)[^\d]*(\d{4}[-\/]\d{2}[-\/]\d{2})/i);
+  if(crdM)d.deliveryDate=dateNorm(crdM[1]);
+  else if(allDates.length>1&&allDates[1]!==allDates[0])d.deliveryDate=allDates[1];
 
-  const parseNum=s=>parseFloat((s||'').replace(/\s/g,'').replace(',','.'));
-
-  // ══ AIKO FORMAT — szukaj etykiet z dokumentu ══
   const isAiko=/\baiko\b/i.test(t);
 
   if(isAiko){
-    // Type of Goods — nazwa modułu
-    const togM=t.match(/Type\s+of\s+Goods[:\s]*([^\n]{5,80})/i);
-    if(togM) d.model=togM[1].trim().replace(/\s+/g,' ');
+    // AIKO PDF: nagłówki kończą się na "Amount", potem nr wiersza, model, opis (z 、), PCS qty price/W price/pcs date amount
+    const afterAmt=t.replace(/[\s\S]*?\bAmount\b/i,'');
+    const dataBlock=afterAmt.replace(/^\s*\d+\s*/,'');
 
-    // Description of Goods — opis
-    const dogM=t.match(/Description\s+of\s+Goods[:\s]*([^\n]{5,120})/i);
-    if(dogM) d.desc=dogM[1].trim().replace(/\s+/g,' ');
+    // Opis zaczyna się od: cyfry + 、lub cyfry + , + spacja + - (np. "455、 -" lub "480, +")
+    const descIdx=dataBlock.search(/\d{3,4}[、，]\s*[-+]/);
 
-    // Quantity
-    const qtyM=t.match(/Quantity[:\s]*([\d,.\s]+?)(?:\s*(?:PCS|pcs|szt|pc)\b|\n)/i)
-      ||t.match(/\b([\d,]+)[,.]?0{0,4}\s*(?:PCS|pcs|szt)\b/i);
-    if(qtyM){
-      const raw=(qtyM[1]||'').replace(/[,\s]/g,'').replace(/\.0+$/,'');
-      d.qty=parseInt(raw)||undefined;
+    if(descIdx>=0){
+      // Model: tekst przed opisem
+      const modelRaw=dataBlock.slice(0,descIdx);
+      d.model=modelRaw.replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+
+      const rest=dataBlock.slice(descIdx);
+
+      // Opis: do "PCS"
+      const pcsIdx=rest.search(/\bPCS\b/i);
+      if(pcsIdx>0){
+        d.desc=rest.slice(0,pcsIdx).replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+
+        // Po PCS: liczby — qty, price/W, price/pcs, amount
+        const afterPcs=rest.slice(pcsIdx+3).replace(/,/g,'');
+        const nums=(afterPcs.match(/(\d+(?:\.\d+)?)/g)||[]).map(Number).filter(n=>n>0);
+
+        // qty — pierwsza duża liczba całkowita (>100)
+        const qty=nums.find(n=>Number.isInteger(n)&&n>100);
+        if(qty)d.qty=qty;
+
+        // price/W — mała liczba (0.05–2)
+        const pw=nums.find(n=>n>=0.05&&n<2&&!Number.isInteger(n));
+        if(pw)d.priceW=parseFloat(pw.toFixed(4));
+
+        // amount — największa liczba
+        const amounts=nums.filter(n=>n>500);
+        if(amounts.length)d.amount=parseFloat(Math.max(...amounts).toFixed(2));
+      }
+    } else {
+      // Fallback
+      const mdlM=t.match(/AIKO-[A-Z0-9]+(?:\n|\s+)[A-Za-z]+/i)||t.match(/AIKO-[A-Z0-9\s]+/i);
+      if(mdlM)d.model=mdlM[0].replace(/\n/g,' ').trim();
+      const dscM=t.match(/(\d{3,4}[、，][^\n]{5,80})/);
+      if(dscM)d.desc=dscM[1].replace(/\n/g,' ').trim();
+      const qtyM=t.match(/PCS\s+(\d+)/i);
+      if(qtyM)d.qty=parseInt(qtyM[1]);
+      const pwM=t.match(/\b0\.\d{3,4}\b/);
+      if(pwM)d.priceW=parseFloat(pwM[0]);
     }
 
-    // Unit Price /W — cena za Wp
-    const priceM=t.match(/Unit\s+Price\s*\/W[^:\n]{0,30}[:\s]*([\d,.\s]+)/i)
-      ||t.match(/Unit\s+Price[^:\n]{0,20}\/W[^:\n]{0,10}[:\s]*([\d,.\s]+)/i);
-    if(priceM){
-      const v=parseNum(priceM[1].trim().split(/\s/)[0]);
-      if(v>0&&v<5)d.priceW=parseFloat(v.toFixed(4));
-    }
-
-    // Wartość całkowita
-    const amtM=t.match(/(?:Total\s*Amount|Amount)[^:\n]{0,20}[:\s]*([\d,.\s]{4,})/i)
-      ||t.match(/(?:Razem|Netto|Total)[:\s]*([\d ,]+\.\d{2})/i);
-    if(amtM){
-      const v=parseNum(amtM[1].trim().split(/\s/)[0]);
-      if(v>100)d.amount=parseFloat(v.toFixed(2));
-    }
-
-    // Moc — z opisu lub nazwy
-    const mocSrc=(d.desc||'')+(d.model||'')+' '+t;
-    const mocM=mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})[、,\s]/)||mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*[Ww][pP]?\b/);
-    if(mocM)d.power=parseInt(mocM[1]);
+    // Moc z opisu
+    if(d.desc){const m=d.desc.match(/^(\d{3,4})/);if(m)d.power=parseInt(m[1]);}
+    if(!d.power&&d.model){const m=d.model.match(/\b([3-9]\d{2}|[1-9]\d{3})\b/);if(m)d.power=parseInt(m[1]);}
 
   } else {
-    // ══ INNE FORMATY — ogólne parsowanie ══
-    const qtyM=t.match(/\b(\d{1,6})[,.]0{3,4}\s*(?:szt\.?|pcs\.?)/i)||t.match(/\b(\d{1,6})\s*(?:szt\.?|pcs\.?)/i);
-    if(qtyM)d.qty=parseInt((qtyM[1]||'').replace(/,/g,''));
-
-    const cenaM=t.match(/(?:Unit\s*[Pp]rice)[^\d]{0,30}([\d.,]+)/i);
-    if(cenaM){const v=parseNum(cenaM[1]);if(v>0&&v<5)d.priceW=parseFloat(v.toFixed(4));}
-
-    const mdlM=t.match(/AIKO-[A-Z0-9-]+(?:\s+\w+)?/i)||t.match(/(?:JKM|JAM|CS)\d+[A-Z0-9-]+/i);
+    // Inne formaty
+    const qtyM=t.match(/\b(\d{1,6})\s*(?:szt\.?|pcs\.?)/i);
+    if(qtyM)d.qty=parseInt(qtyM[1]);
+    const mdlM=t.match(/(?:JKM|JAM|CS|TSM)\d+[A-Z0-9-]*/i);
     if(mdlM)d.model=mdlM[0].trim();
-
-    const dscM=t.match(/(\d{3,4}[、，,][^,\n]{0,60}(?:Black|White)[^,\n]{0,30})/i);
+    const dscM=t.match(/(\d{3,4}[、，][^,\n]{0,80}(?:Black|White)[^,\n]{0,30})/i);
     if(dscM)d.desc=dscM[1].trim();
-
     const mocSrc=(d.model||'')+' '+t;
     const mocM=mocSrc.match(/\b([3-9]\d{2}|[1-9]\d{3})\s*[Ww][pP]?\b/i);
     if(mocM)d.power=parseInt(mocM[1]);
-
-    // Przelicz cenę/szt → cena/Wp
-    if(!d.priceW&&d._cenaPerPcs&&d.power)
-      d.priceW=parseFloat((d._cenaPerPcs/d.power).toFixed(4));
+    const pwM=t.match(/0\.\d{3,4}/);
+    if(pwM)d.priceW=parseFloat(pwM[0]);
   }
 
-  // Oblicz amount jeśli mamy qty, priceW, power
   if(!d.amount&&d.qty&&d.priceW&&d.power)
     d.amount=parseFloat((d.qty*d.priceW*d.power).toFixed(2));
 
-  // ══ Incoterms & Port ══
+  // Incoterms & Port
   if(/\bFCA\b/.test(t))d.incoterms='FCA';
   else if(/\bCIF\b/.test(t))d.incoterms='CIF';
   else if(/\bFOB\b/.test(t))d.incoterms='FOB';
@@ -1731,7 +1728,7 @@ function parsePoText(text){
   else d.incoterms='';
 
   if(/Rotterdam/i.test(t))d.port='Rotterdam';
-  else if(/Gda[ńn]sk/i.test(t))d.port='Gdańsk';
+  else if(/Gda[\u0144n]sk/i.test(t))d.port='Gda\u0144sk';
   else if(/Hamburg/i.test(t))d.port='Hamburg';
   else if(/Antwerp/i.test(t))d.port='Antwerpen';
   else d.port='';
