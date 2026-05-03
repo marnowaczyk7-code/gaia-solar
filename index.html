@@ -1162,15 +1162,18 @@ function renderStats(){
   const tot=active.reduce((s,o)=>s+o.amount,0),totQ=active.reduce((s,o)=>s+o.qty,0),totC=active.reduce((s,o)=>s+getCCount(o),0);
   let w=0,z=0,r=0,zT=0;
   active.forEach(o=>{syncContainers(o);w+=o.containers.filter(c=>c.status==='wolne').length;z+=o.containers.filter(c=>c.status==='zarezerwowane').length;r+=o.containers.filter(c=>c.status==='zrealizowane').length;if(o.zaliczka==='tak')zT++;});
+  // Zrealizowane ze wszystkich zamówień (też nie-archived)
+  let rAll=0;orders.forEach(o=>{syncContainers(o);rAll+=o.containers.filter(c=>c.status==='zrealizowane').length;});
   const archCount=orders.filter(o=>o.archived).length;
+  const archInfo=rAll>0||archCount>0?`${rAll} kont. ✓${archCount>0?` · ${archCount} zam. w arch.`:''}`:null;
   document.getElementById('stats').innerHTML=`
-    <div class="stat"><div class="stat-label">Aktywnych zamówień</div><div class="stat-value blue">${active.length}</div><div class="stat-sub">${totC} kontenerów · ${archCount>0?`<span style="color:var(--ink4)">${archCount} w archiwum</span>`:'brak w archiwum'}</div></div>
+    <div class="stat"><div class="stat-label">Aktywnych zamówień</div><div class="stat-value blue">${active.length}</div><div class="stat-sub">${archInfo?`<span style="color:var(--ink4)">${archInfo}</span>`:'brak w archiwum'}</div></div>
     <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">${fmt(totQ,0)}</div><div class="stat-sub">sztuk · ${active.length} PO</div></div>
     <div class="stat stat-price"><div class="stat-label">Wartość łącznie</div><div class="stat-value green" style="font-size:20px">${fmt(Math.round(tot),0)} €</div><div class="stat-sub">EUR bez VAT</div></div>
     <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row">
       <div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div>
       <div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div>
-      ${r?`<div class="stat-dot-item"><span class="sdot teal"></span><span class="stat-dot-val">${r}</span><span class="stat-dot-lbl">zrealizowanych</span></div>`:''}
+      ${r>0?`<div class="stat-dot-item"><span class="sdot teal"></span><span class="stat-dot-val">${r}</span><span class="stat-dot-lbl">zrealizowanych</span></div>`:''}
     </div></div>
     <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${active.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
 }
@@ -1442,46 +1445,105 @@ async function restoreOrder(oid){
 }
 
 function renderArchive(){
-  const archived=orders.filter(o=>o.archived);
   const el=document.getElementById('archive-content');
-  if(!archived.length){
+
+  // Zbierz wszystkie zrealizowane kontenery ze wszystkich zamówień
+  const slots=[];
+  orders.forEach(o=>{
+    syncContainers(o);
+    o.containers.forEach((c,i)=>{
+      if(c.status==='zrealizowane'){
+        slots.push({order:o, contIdx:i, qty:getContQty(o,i), total:getCCount(o)});
+      }
+    });
+  });
+
+  // Ręcznie zarchiwizowane całe zamówienia (stary system)
+  const fullArchived=orders.filter(o=>o.archived&&!o.containers.some(c=>c.status==='zrealizowane'));
+
+  if(!slots.length&&!fullArchived.length){
     el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--ink4);font-size:13px">
       <div style="font-size:32px;margin-bottom:12px">📦</div>
-      Brak zarchiwizowanych zamówień
+      Brak zrealizowanych kontenerów
     </div>`;
     return;
   }
+
+  // Grupuj sloty per zamówienie
+  const byOrder={};
+  slots.forEach(s=>{
+    const id=s.order.id;
+    if(!byOrder[id])byOrder[id]={order:s.order,slots:[]};
+    byOrder[id].slots.push(s);
+  });
+
   let html='';
-  archived.forEach(o=>{
-    syncContainers(o);
+
+  // Zrealizowane kontenery (per zamówienie)
+  Object.values(byOrder).forEach(({order:o, slots:oSlots})=>{
     const n=getCCount(o);
-    const r=o.containers.filter(c=>c.status==='zrealizowane').length;
-    const z=o.containers.filter(c=>c.status==='zarezerwowane').length;
-    const w=o.containers.filter(c=>c.status==='wolne').length;
-    // Pasek postępu
-    const progress=n>1?`<div class="order-progress" style="margin-top:4px">
-      ${r?`<div class="op-seg op-r" style="flex:${r}" title="${r} zrealizowanych"></div>`:''}
-      ${z?`<div class="op-seg op-z" style="flex:${z}" title="${z} zarezerwowanych"></div>`:''}
-      ${w?`<div class="op-seg op-w" style="flex:${w}" title="${w} wolnych"></div>`:''}
-    </div>`:'';
+    const rQ=oSlots.reduce((s,x)=>s+x.qty,0);
+    const totalQ=o.qty;
+    const allRealized=oSlots.length===n;
+
     html+=`<div class="arch-card">
       <div class="arch-card-main">
+        <div>
+          <div class="dc-prod">${o.producent||'—'}</div>
+          <div class="dc-nlm">${o.nlm}</div>
+        </div>
+        <div>
+          <div class="dc-model">${o.model}</div>
+          <div class="dc-desc">${o.desc||''}</div>
+          <div class="order-progress" style="margin-top:6px">
+            <div class="op-seg op-r" style="flex:${oSlots.length}" title="${oSlots.length} zrealizowanych"></div>
+            ${n-oSlots.length>0?`<div class="op-seg" style="flex:${n-oSlots.length};background:var(--border)" title="${n-oSlots.length} pozostałych"></div>`:''}
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)">${o.power?o.power+'W':'—'}</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.typ||'—'}</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.rama||'—'}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);text-align:right">
+          ${fmt(rQ,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">z ${fmt(totalQ,0)} szt.</div>
+        </div>
+        <div><span class="realized-badge">${oSlots.length}/${n} kont. ✓</span></div>
+        <div><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></div>
+        <div class="dc-num price-col" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          ${allRealized?'<span style="font-size:10px;font-weight:700;color:#0F766E;font-family:\'Inter\',sans-serif">✅ W pełni</span>':''}
+          ${window.isAdmin?`<button class="arch-restore-btn" onclick="unrealizeAll('${o.id}')">↩ Cofnij</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Ręcznie zarchiwizowane całe zamówienia
+  fullArchived.forEach(o=>{
+    html+=`<div class="arch-card" style="opacity:.7">
+      <div class="arch-card-main">
         <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
-        <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div>${progress}</div>
+        <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div></div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)">${o.power?o.power+'W':'—'}</div>
         <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.typ||'—'}</div>
         <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.rama||'—'}</div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);text-align:right">${fmt(o.qty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <span class="realized-badge">${r}/${n} ✓</span>
-        </div>
+        <div><span class="realized-badge">archiwum</span></div>
         <div><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></div>
         <div class="dc-num price-col" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
-        <button class="arch-restore-btn" onclick="restoreOrder('${o.id}')">↩ Przywróć</button>
+        ${window.isAdmin?`<button class="arch-restore-btn" onclick="restoreOrder('${o.id}')">↩ Przywróć</button>`:'<div></div>'}
       </div>
     </div>`;
   });
+
   el.innerHTML=html;
+}
+
+function unrealizeAll(oid){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może cofać realizację');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  syncContainers(o);
+  o.containers.forEach(c=>{if(c.status==='zrealizowane')c.status='wolne';});
+  saveData();renderAll();toast('↩️ Cofnięto realizację kontenerów');
 }
 
 function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
@@ -1523,11 +1585,6 @@ function setCont(oid,idx,f,v,silent=false){
   syncContainers(o);if(!o.containers[idx])return;
   o.containers[idx][f]=v;
   if(getCCount(o)===1)o.status=o.containers[0].status;
-  // Auto-archiwizacja gdy wszystkie kontenery zrealizowane
-  if(f==='status'&&isFullyRealized(o)&&!o.archived){
-    o.archived=true;
-    toast('✅ Zamówienie w pełni zrealizowane — przeniesiono do Archiwum');
-  }
   saveData();
   if(!silent){renderAll();}else{renderStats();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
 }
