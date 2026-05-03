@@ -607,8 +607,9 @@ body.no-prices .tab-btn[data-tab="archive"] { display:none !important; }
 }
 .arch-card:hover{opacity:1;box-shadow:var(--shadow)}
 .arch-card-main{
-  display:grid;grid-template-columns:200px 1fr 50px 70px 70px 80px 90px 60px auto 28px;gap:8px;
-  align-items:center;padding:11px 16px;
+  display:grid;
+  grid-template-columns:180px minmax(0,1fr) 55px 80px 80px 80px 100px 60px 100px auto;
+  gap:12px;align-items:center;padding:12px 16px;
 }
 .arch-restore-btn{
   padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);
@@ -1177,7 +1178,6 @@ function renderStats(){
     <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row">
       <div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div>
       <div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div>
-      ${r>0?`<div class="stat-dot-item"><span class="sdot teal"></span><span class="stat-dot-val">${r}</span><span class="stat-dot-lbl">zrealizowanych</span></div>`:''}
     </div></div>
     <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${active.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
 }
@@ -1505,22 +1505,20 @@ function renderArchive(){
         <div>
           <div class="dc-model">${o.model}</div>
           <div class="dc-desc">${o.desc||''}</div>
-          <div class="order-progress" style="margin-top:6px">
-            <div class="op-seg op-r" style="flex:${oSlots.length}" title="${oSlots.length} zrealizowanych"></div>
-            ${n-oSlots.length>0?`<div class="op-seg" style="flex:${n-oSlots.length};background:var(--border)" title="${n-oSlots.length} pozostałych"></div>`:''}
+          <div class="order-progress" style="margin-top:5px">
+            <div class="op-seg op-r" style="flex:${oSlots.length}"></div>
+            ${n-oSlots.length>0?`<div class="op-seg" style="flex:${n-oSlots.length};background:var(--border)"></div>`:''}
           </div>
         </div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)">${o.power?o.power+'W':'—'}</div>
         <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.typ||'—'}</div>
         <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.rama||'—'}</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);text-align:right">
-          ${fmt(rQ,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">z ${fmt(totalQ,0)} szt.</div>
-        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);text-align:right">${fmt(rQ,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">z ${fmt(totalQ,0)} szt.</div></div>
         <div><span class="realized-badge">${oSlots.length}/${n} kont. ✓</span></div>
         <div><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></div>
-        <div class="dc-num price-col" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-          ${allRealized?'<span style="font-size:10px;font-weight:700;color:#0F766E;font-family:\'Inter\',sans-serif">✅ W pełni</span>':''}
+        <div class="price-col" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+        <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+          ${allRealized?'<span style="font-size:11px;font-weight:700;color:#0F766E">✅</span>':''}
           ${window.isAdmin?`<button class="arch-restore-btn" onclick="unrealizeAll('${o.id}')">↩ Cofnij</button>`:''}
         </div>
       </div>
@@ -1539,8 +1537,8 @@ function renderArchive(){
         <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);text-align:right">${fmt(o.qty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
         <div><span class="realized-badge">archiwum</span></div>
         <div><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></div>
-        <div class="dc-num price-col" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
-        ${window.isAdmin?`<button class="arch-restore-btn" onclick="restoreOrder('${o.id}')">↩ Przywróć</button>`:'<div></div>'}
+        <div class="price-col" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+        <div style="display:flex;justify-content:flex-end">${window.isAdmin?`<button class="arch-restore-btn" onclick="restoreOrder('${o.id}')">↩ Przywróć</button>`:''}</div>
       </div>
     </div>`;
   });
