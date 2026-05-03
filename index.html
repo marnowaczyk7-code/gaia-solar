@@ -201,11 +201,12 @@ tbody td:first-child{padding:11px 8px;text-align:center;width:32px}
 .td-model{font-weight:600;font-size:13px;color:var(--ink)}
 .td-desc{font-size:11px;color:var(--ink4);margin-top:3px;font-family:'Inter',sans-serif;font-weight:400}
 .td-num{text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink3)}
+.td-power{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);text-align:right}
 .td-select{
-  border:1.5px solid var(--border);border-radius:6px;padding:3px 6px;
-  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--ink);
-  background:var(--paper2);outline:none;cursor:pointer;transition:.15s;
-  max-width:100px;
+  border:1.5px solid var(--border);border-radius:7px;padding:4px 8px;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink);
+  background:var(--paper);outline:none;cursor:pointer;transition:.15s;
+  max-width:110px;width:100%;
 }
 .td-select:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 .td-select:hover{border-color:var(--ink4)}
@@ -1091,7 +1092,7 @@ function renderStats(){
   document.getElementById('stats').innerHTML=`
     <div class="stat"><div class="stat-label">Zamówień</div><div class="stat-value blue">${orders.length}</div><div class="stat-sub">${totC} kontenerów łącznie</div></div>
     <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">${fmt(totQ,0)}</div><div class="stat-sub">sztuk · ${orders.length} PO</div></div>
-    <div class="stat"><div class="stat-label">Wartość łącznie</div><div class="stat-value green">${fmt(Math.round(tot/1000))}k</div><div class="stat-sub">EUR bez VAT</div></div>
+    <div class="stat"><div class="stat-label">Wartość łącznie</div><div class="stat-value green" style="font-size:20px">${fmt(Math.round(tot),0)} €</div><div class="stat-sub">EUR bez VAT</div></div>
     <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div><div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div></div></div>
     <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${orders.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
 }
@@ -1114,7 +1115,7 @@ function renderTable(){
       <td class="td-producer">${o.producent||'—'}</td>
       <td class="td-nlm">${o.nlm}</td>
       <td><div class="td-model">${o.model}</div><div class="td-desc">${o.desc||''}</div></td>
-      <td class="td-num" style="font-weight:600;color:var(--ink4)">${o.power?o.power+'W':'—'}</td>
+      <td class="td-power">${o.power?o.power+'W':'—'}</td>
       <td><select class="td-select" onchange="setOrderField('${o.id}','typ',this.value)">
         <option value="">—</option>
         <option${o.typ==='Bifacial'?' selected':''}>Bifacial</option>
@@ -1293,9 +1294,9 @@ function renderDeliveryCard(oSlots, dateKey){
     <div class="del-card-main" onclick="delDateToggleExp('${o.id}','${dateKey}')">
       <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
       <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div></div>
-      <div class="dc-num" style="font-size:10px;font-weight:700;color:var(--ink4);font-family:'JetBrains Mono',monospace">${o.power?o.power+'W':'—'}</div>
-      <div style="font-size:10px;font-weight:600;color:var(--ink3);font-family:'Inter',sans-serif">${o.typ||'—'}</div>
-      <div style="font-size:10px;font-weight:600;color:var(--ink3);font-family:'Inter',sans-serif">${o.rama||'—'}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)">${o.power?o.power+'W':'—'}</div>
+      <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.typ||'—'}</div>
+      <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.rama||'—'}</div>
       <div class="dc-num" style="font-weight:700;color:var(--ink)">${fmt(slotQty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
       <div><span class="dc-cont-label">${contLabel}</span></div>
       <div>${sBdg}</div>
