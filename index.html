@@ -999,7 +999,10 @@ async function saveData(){
   // Zawsze zapisz lokalnie
   try{localStorage.setItem('gaia-solar-v4',JSON.stringify(orders));}catch(e){}
 
-  if(!supa||_saving)return;_saving=true;
+  if(!supa)return;
+  // Jeśli trwa zapis — poczekaj chwilę i spróbuj ponownie
+  if(_saving){await new Promise(r=>setTimeout(r,300));}
+  _saving=true;
   syncStatus('syncing','zapisywanie…');
   try{
     const {error}=await supa.from('orders').upsert({id:DB_ROW,data:orders,updated_at:new Date().toISOString()});
@@ -1421,15 +1424,21 @@ function setContDel(oid,idx,f,v){
 }
 
 /* ════ INTERACTIONS ════ */
-function archiveOrder(oid){
+async function archiveOrder(oid){
   if(!window.isAdmin){toast('🔒 Tylko administrator może archiwizować');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;
-  o.archived=true;saveData();renderAll();toast('📦 Przeniesiono do archiwum');
+  o.archived=true;
+  await saveData();
+  renderAll();
+  toast('📦 Przeniesiono do archiwum');
 }
-function restoreOrder(oid){
+async function restoreOrder(oid){
   if(!window.isAdmin){toast('🔒 Tylko administrator może przywracać');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;
-  o.archived=false;saveData();renderAll();toast('↩️ Przywrócono do aktywnych');
+  o.archived=false;
+  await saveData();
+  renderAll();
+  toast('↩️ Przywrócono do aktywnych');
 }
 
 function renderArchive(){
