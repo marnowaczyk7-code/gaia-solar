@@ -311,16 +311,17 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 /* ══════════════════════════════════════════════════
    BADGES & TOGGLES
 ══════════════════════════════════════════════════ */
-.stoggle{display:inline-flex;border-radius:7px;overflow:hidden;border:1.5px solid var(--border);background:var(--paper2);gap:2px;padding:2px;}
+.stoggle{display:inline-flex;border-radius:7px;overflow:hidden;border:1.5px solid var(--border);background:var(--paper2);gap:2px;padding:2px;flex-shrink:0;}
 .stoggle button{
   width:26px;height:22px;border:none;cursor:pointer;border-radius:5px;
   font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
-  background:transparent;color:var(--border);transition:all .15s;
+  background:transparent;color:var(--border);transition:all .15s;flex-shrink:0;
 }
 .stoggle button.aw{background:var(--green);color:#fff;box-shadow:0 1px 4px rgba(30,107,62,.3)}
 .stoggle button.az{background:var(--red);color:#fff;box-shadow:0 1px 4px rgba(185,28,28,.3)}
-.stoggle button:not(.aw):not(.az){color:var(--ink4);opacity:.45}
-.stoggle button:hover:not(.aw):not(.az){background:var(--bg2);color:var(--ink2);opacity:1}
+.stoggle button.ar{background:#0F766E;color:#fff;box-shadow:0 1px 4px rgba(15,118,110,.35)}
+.stoggle button:not(.aw):not(.az):not(.ar){color:var(--ink4);opacity:.45}
+.stoggle button:hover:not(.aw):not(.az):not(.ar){background:var(--bg2);color:var(--ink2);opacity:1}
 
 .ztoggle{display:inline-flex;border-radius:99px;overflow:hidden;border:1.5px solid var(--border);background:var(--paper2)}
 .ztoggle button{
@@ -418,7 +419,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .del-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .del-card.exp{box-shadow:0 0 0 2px var(--gold2),var(--shadow);border-color:var(--gold);border-left-color:var(--gold)}
 .del-card-main{
-  display:grid;grid-template-columns:200px 1fr 50px 70px 70px 90px 110px 60px 100px 28px;gap:12px;
+  display:grid;grid-template-columns:200px 1fr 50px 70px 70px 90px 110px 90px 80px 100px 28px;gap:10px;
   align-items:center;padding:11px 16px;cursor:pointer;transition:background .15s;
 }
 .del-card-main:hover{background:var(--paper2)}
