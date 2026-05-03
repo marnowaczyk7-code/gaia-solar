@@ -1141,10 +1141,12 @@ function bulkBarHtml(oid, n){
 
 function contPanel(o){
   const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
+  const activeContainers=o.containers.map((c,i)=>({c,i})).filter(({c})=>c.status!=='zrealizowane');
+  const nActive=activeContainers.length;
   let h=bulkBarHtml(o.id, n);
   h+=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
-  for(let i=0;i<n;i++){
-    const c=o.containers[i],cq=getContQty(o,i),part=i===n-1&&cq<cap;
+  activeContainers.forEach(({c,i})=>{
+    const cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
     h+=`<div class="cont-row">
       <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
@@ -1153,7 +1155,7 @@ function contPanel(o){
       <div>${stToggle(o.id,i,c.status)}</div>
       <div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)"></div>
     </div>`;
-  }
+  });
   return h;
 }
 
