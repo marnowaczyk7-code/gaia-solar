@@ -584,6 +584,13 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .toast.show{opacity:1;transform:none}
 
 /* ══════════════════════════════════════════════════
+   TRYB BEZ CEN
+══════════════════════════════════════════════════ */
+body.no-prices .price-col { display:none !important; }
+body.no-prices .stat-price { display:none !important; }
+body.no-prices .ms-value   { display:none !important; }
+
+/* ══════════════════════════════════════════════════
    ANIMATIONS
 ══════════════════════════════════════════════════ */
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -684,7 +691,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
           <th onclick="sortBy('rama')">Rama</th>
           <th onclick="sortBy('qty')" style="text-align:right">Ilość</th>
           <th onclick="sortBy('_cc')">Kont.</th>
-          <th onclick="sortBy('priceW')" style="text-align:right">Cena/Wp €</th>
+          <th onclick="sortBy('priceW')" style="text-align:right" class="price-col">Cena/Wp €</th>
           <th onclick="sortBy('deliveryDate')">CRD</th>
           <th onclick="sortBy('port')">Port</th>
           <th onclick="sortBy('status')">Status</th>
@@ -1092,7 +1099,7 @@ function renderStats(){
   document.getElementById('stats').innerHTML=`
     <div class="stat"><div class="stat-label">Zamówień</div><div class="stat-value blue">${orders.length}</div><div class="stat-sub">${totC} kontenerów łącznie</div></div>
     <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">${fmt(totQ,0)}</div><div class="stat-sub">sztuk · ${orders.length} PO</div></div>
-    <div class="stat"><div class="stat-label">Wartość łącznie</div><div class="stat-value green" style="font-size:20px">${fmt(Math.round(tot),0)} €</div><div class="stat-sub">EUR bez VAT</div></div>
+    <div class="stat stat-price"><div class="stat-label">Wartość łącznie</div><div class="stat-value green" style="font-size:20px">${fmt(Math.round(tot),0)} €</div><div class="stat-sub">EUR bez VAT</div></div>
     <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div><div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div></div></div>
     <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${orders.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
 }
@@ -1130,7 +1137,7 @@ function renderTable(){
       </select></td>
       <td class="td-num" style="font-weight:600">${fmt(o.qty,0)}</td>
       <td>${cCol}</td>
-      <td class="td-num">${fmt(o.priceW,3)}</td>
+      <td class="td-num price-col">${fmt(o.priceW,3)}</td>
       <td style="white-space:nowrap">${getOrderDeliveryLabel(o)}<div style="font-size:9px;color:var(--ink4);margin-top:2px;font-family:'Inter',sans-serif">${o.incoterms}</div></td>
       <td><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></td>
       <td>${sCl}</td>
@@ -1138,7 +1145,7 @@ function renderTable(){
       <td class="td-act"><button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button></td>
     </tr>`;
     if(isExp)html+=`<tr class="cpanel-row"><td colspan="15"><div class="cpanel">
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gold2);border-bottom:1px solid var(--gold3)">
+      <div class="price-col" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gold2);border-bottom:1px solid var(--gold3)">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink4);font-family:'Inter',sans-serif">Wartość zamówienia</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold)">${fmt(o.amount,2)} €</span>
       </div>
@@ -1146,7 +1153,7 @@ function renderTable(){
   });
   body.innerHTML=html;
   const tA=rows.reduce((s,o)=>s+o.amount,0),tQ=rows.reduce((s,o)=>s+o.qty,0),tC=rows.reduce((s,o)=>s+getCCount(o),0);
-  document.getElementById('tbl-foot').innerHTML=`<div class="tf-item"><div class="tf-label">Wyświetlanych</div><div class="tf-val">${rows.length}/${orders.length}</div></div><div class="tf-item"><div class="tf-label">Ilość</div><div class="tf-val">${fmt(tQ,0)} szt.</div></div><div class="tf-item"><div class="tf-label">Kontenery</div><div class="tf-val">${tC}</div></div><div class="tf-item"><div class="tf-label">Wartość</div><div class="tf-val">${fmt(tA,2)} €</div></div>`;
+  document.getElementById('tbl-foot').innerHTML=`<div class="tf-item"><div class="tf-label">Wyświetlanych</div><div class="tf-val">${rows.length}/${orders.length}</div></div><div class="tf-item"><div class="tf-label">Ilość</div><div class="tf-val">${fmt(tQ,0)} szt.</div></div><div class="tf-item"><div class="tf-label">Kontenery</div><div class="tf-val">${tC}</div></div><div class="tf-item price-col"><div class="tf-label">Wartość</div><div class="tf-val">${fmt(tA,2)} €</div></div>`;
 }
 
 /* ════ DELIVERIES ════ */
@@ -1304,7 +1311,7 @@ function renderDeliveryCard(oSlots, dateKey){
         <span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span>
         ${zal?'<span class="zaliczka-tag">ZALICZKA ✓</span>':''}
       </div>
-      <div class="dc-num" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+      <div class="dc-num price-col" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
       <div class="dc-arrow"><svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 1.5l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </div>
     <div class="del-panel"><div class="cpanel">${contPanelSlots(o,oSlots)}</div></div>
@@ -1851,10 +1858,12 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
   const hdrDate=document.getElementById('hdr-date');
   if(hdrDate) hdrDate.innerHTML=now.toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'<br>'+now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
 
-  // Tryb admin / podgląd
+  // Tryb admin / podgląd / podgląd bez cen
   const ADMIN_PASSWORD='gaia2026';
+  const VIEWER_PASSWORD='gaia-view';
   const params=new URLSearchParams(window.location.search);
   window.isAdmin=params.get('admin')===ADMIN_PASSWORD;
+  window.noPrices=params.get('viewer')===VIEWER_PASSWORD;
 
   const modeBadge=document.getElementById('mode-badge');
   const hdrActions=document.getElementById('hdr-actions');
@@ -1863,6 +1872,12 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
     if(window.isAdmin){
       modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(213,161,111,.2);color:#D5A16F;border:1px solid rgba(213,161,111,.3)';
       modeBadge.textContent='✏️ ADMIN';
+    } else if(window.noPrices){
+      if(hdrActions) hdrActions.style.display='none';
+      modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(109,40,217,.15);color:#6D28D9;border:1px solid rgba(109,40,217,.25)';
+      modeBadge.textContent='👁 PODGLĄD';
+      // Ukryj kolumny z cenami przez klasę na body
+      document.body.classList.add('no-prices');
     } else {
       if(hdrActions) hdrActions.style.display='none';
       modeBadge.style.cssText='display:block;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;font-family:Inter,sans-serif;background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.25)';
