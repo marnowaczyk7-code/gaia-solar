@@ -1047,6 +1047,7 @@ function getFiltered(){
   const q=document.getElementById('search-input').value.toLowerCase();
   return orders.filter(o=>{
     if(o.archived)return false;
+    if(isFullyRealized(o))return false; // ukryj w pełni zrealizowane
     const mp=!filterPort||o.port===filterPort;
     const ms=!filterStatus||(filterStatus==='wolne'?isAllWolne(o):!isAllWolne(o));
     const mq=!q||[o.nlm,o.model,o.port,o.desc,o.notes,o.producent].some(v=>String(v||'').toLowerCase().includes(q));
