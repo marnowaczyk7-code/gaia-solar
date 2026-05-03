@@ -583,12 +583,43 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 }
 .toast.show{opacity:1;transform:none}
 
-/* ══════════════════════════════════════════════════
-   TRYB BEZ CEN
-══════════════════════════════════════════════════ */
+/* ── TRYB BEZ CEN ── */
 body.no-prices .price-col { display:none !important; }
 body.no-prices .stat-price { display:none !important; }
 body.no-prices .ms-value   { display:none !important; }
+
+/* ── STATUS ZREALIZOWANY ── */
+.stoggle button.ar{background:#0F766E;color:#fff;box-shadow:0 1px 4px rgba(15,118,110,.35)}
+.sdot.teal{background:#0F766E}
+.cs-real{background:#F0FDFA;color:#0F766E;border-color:#99F6E4}
+.realized-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:5px;
+  font-size:10px;font-weight:700;font-family:'Inter',sans-serif;
+  background:#F0FDFA;color:#0F766E;border:1px solid #99F6E4;
+}
+
+/* ── ARCHIWUM ── */
+.arch-card{
+  background:var(--paper);border:1px solid var(--border);border-left:3px solid #0F766E;
+  border-radius:var(--r);margin-bottom:6px;overflow:hidden;box-shadow:var(--shadow-sm);
+  opacity:.85;transition:all .18s;
+}
+.arch-card:hover{opacity:1;box-shadow:var(--shadow)}
+.arch-card-main{
+  display:grid;grid-template-columns:200px 1fr 50px 70px 70px 80px 90px 60px auto 28px;gap:8px;
+  align-items:center;padding:11px 16px;
+}
+.arch-restore-btn{
+  padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);
+  background:var(--paper2);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;
+  color:var(--ink3);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.arch-restore-btn:hover{border-color:var(--gold);color:var(--gold-dk);background:var(--gold2)}
+.order-progress{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.op-seg{height:6px;border-radius:3px;min-width:4px;flex:1;transition:all .3s}
+.op-w{background:var(--green)}
+.op-z{background:var(--amber)}
+.op-r{background:#0F766E}
 
 /* ══════════════════════════════════════════════════
    ANIMATIONS
@@ -655,6 +686,10 @@ body.no-prices .ms-value   { display:none !important; }
     <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"></rect><path d="M5 1v3M11 1v3M1 7h14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>
     Harmonogram dostaw
   </button>
+  <button class="tab-btn" data-tab="archive" onclick="switchTab(this)">
+    <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"></rect><path d="M1 5l2-4h10l2 4M6 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>
+    Archiwum
+  </button>
 </nav>
 
 <!-- ═══════ STATS ═══════ -->
@@ -716,6 +751,18 @@ body.no-prices .ms-value   { display:none !important; }
       <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">← kliknij kartę aby zobaczyć kontenery</span>
     </div>
     <div id="del-content"></div>
+  </div>
+</div>
+
+<!-- ═══════ TAB: ARCHIWUM ═══════ -->
+<div id="tab-archive" class="tab-content">
+  <div class="del-wrap">
+    <div class="del-toolbar">
+      <span style="font-size:12px;color:var(--ink3);font-family:'Inter',sans-serif;font-weight:500">Zamówienia w pełni zrealizowane lub ręcznie przeniesione do archiwum</span>
+      <div style="flex:1"></div>
+      <span style="font-size:11px;color:var(--ink4);font-family:'Inter',sans-serif">Archiwum nie usuwa danych — możesz przywrócić zamówienie w każdej chwili</span>
+    </div>
+    <div id="archive-content"></div>
   </div>
 </div>
 
@@ -867,6 +914,7 @@ function syncContainers(o){
   o.containers.forEach(c=>{if(c.deliveryDate===undefined)c.deliveryDate=o.deliveryDate||'';});
 }
 function isAllWolne(o){syncContainers(o);return o.containers.every(c=>c.status==='wolne');}
+function isFullyRealized(o){syncContainers(o);return o.containers.every(c=>c.status==='zrealizowane');}
 
 /* ════ SUPABASE ════ */
 const SUPA_URL='https://dpfiozxqmpkewitwyazs.supabase.co';
@@ -976,6 +1024,7 @@ function switchTab(btn){
   btn.classList.add('active');
   document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
   if(btn.dataset.tab==='deliveries')renderDeliveries();
+  if(btn.dataset.tab==='archive')renderArchive();
 }
 
 /* ════ FILTERS ════ */
@@ -994,6 +1043,7 @@ function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=1;}renderTa
 function getFiltered(){
   const q=document.getElementById('search-input').value.toLowerCase();
   return orders.filter(o=>{
+    if(o.archived)return false;
     const mp=!filterPort||o.port===filterPort;
     const ms=!filterStatus||(filterStatus==='wolne'?isAllWolne(o):!isAllWolne(o));
     const mq=!q||[o.nlm,o.model,o.port,o.desc,o.notes,o.producent].some(v=>String(v||'').toLowerCase().includes(q));
@@ -1012,15 +1062,26 @@ function portCls(p){return p==='Rotterdam'?'pr':(p==='Gdańsk'||p==='Gdansk')?'p
 function portLabel(p){return p==='Rotterdam'?'RTD':(p==='Gdańsk'||p==='Gdansk')?'GDA':p;}
 
 function stToggle(oid,idx,status){
-  const sw=status==='wolne';
-  return `<div class="stoggle"><button onclick="setCont('${oid}',${idx},'status','wolne')" class="${sw?'aw':''}" title="Wolne">W</button><button onclick="setCont('${oid}',${idx},'status','zarezerwowane')" class="${!sw?'az':''}" title="Zarezerwowane">Z</button></div>`;
+  const sw=status==='wolne', sz=status==='zarezerwowane', sr=status==='zrealizowane';
+  return `<div class="stoggle">
+    <button onclick="setCont('${oid}',${idx},'status','wolne')" class="${sw?'aw':''}" title="Wolne">W</button>
+    <button onclick="setCont('${oid}',${idx},'status','zarezerwowane')" class="${sz?'az':''}" title="Zarezerwowane">Z</button>
+    <button onclick="setCont('${oid}',${idx},'status','zrealizowane')" class="${sr?'ar':''}" title="Zrealizowany">✓</button>
+  </div>`;
 }
 function sumBadge(o,fn){
-  const w=o.containers.filter(c=>c.status==='wolne').length,n=getCCount(o),z=n-w;
+  const w=o.containers.filter(c=>c.status==='wolne').length;
+  const z=o.containers.filter(c=>c.status==='zarezerwowane').length;
+  const r=o.containers.filter(c=>c.status==='zrealizowane').length;
+  const n=getCCount(o);
   let cls='cs-mixed',dot='#475569';
-  if(z===0){cls='cs-wolne';dot='var(--green)';}else if(w===0){cls='cs-zar';dot='var(--amber)';}
-  const lbl=z===0?'wszystkie wolne':w===0?'wszystkie zarez.':w+'W / '+z+'Z';
-  return `<span class="cs-sum ${cls}" onclick="${fn}"><span class="cs-dot" style="background:${dot}${z===0?';box-shadow:0 0 6px var(--green-glow)':w===0?';box-shadow:0 0 6px var(--amber-glow)':''}"></span>${lbl}</span>`;
+  if(r===n){cls='cs-real';dot='#0F766E';}
+  else if(z===0&&r===0){cls='cs-wolne';dot='var(--green)';}
+  else if(w===0&&r===0){cls='cs-zar';dot='var(--amber)';}
+  const parts=[];
+  if(r)parts.push(`${r}✓`);if(z)parts.push(`${z}Z`);if(w)parts.push(`${w}W`);
+  const lbl=parts.join(' / ')||'—';
+  return `<span class="cs-sum ${cls}" onclick="${fn}"><span class="cs-dot" style="background:${dot}"></span>${lbl}</span>`;
 }
 function stockPickerHtml(oid, idx, cDate, changeFn){
   const isRTD = cDate==='STOCK_RTD';
@@ -1069,6 +1130,7 @@ function bulkBarHtml(oid, n){
     <div class="bulk-status-toggle">
       <button class="baw" onclick="bulkSetAll('${oid}','status','wolne')" title="Wszystkie Wolne">W</button>
       <button class="baz" onclick="bulkSetAll('${oid}','status','zarezerwowane')" title="Wszystkie Zarezerwowane">Z</button>
+      <button style="width:26px;height:22px;border:none;cursor:pointer;border-radius:5px;font-size:11px;font-weight:700;background:#0F766E;color:#fff;transition:all .15s;" onclick="bulkSetAll('${oid}','status','zrealizowane')" title="Wszystkie Zrealizowane">✓</button>
     </div>
   </div>`;
 }
@@ -1093,15 +1155,21 @@ function contPanel(o){
 
 /* ════ STATS ════ */
 function renderStats(){
-  const tot=orders.reduce((s,o)=>s+o.amount,0),totQ=orders.reduce((s,o)=>s+o.qty,0),totC=orders.reduce((s,o)=>s+getCCount(o),0);
-  let w=0,z=0,zT=0;
-  orders.forEach(o=>{syncContainers(o);w+=o.containers.filter(c=>c.status==='wolne').length;z+=o.containers.filter(c=>c.status==='zarezerwowane').length;if(o.zaliczka==='tak')zT++;});
+  const active=orders.filter(o=>!o.archived);
+  const tot=active.reduce((s,o)=>s+o.amount,0),totQ=active.reduce((s,o)=>s+o.qty,0),totC=active.reduce((s,o)=>s+getCCount(o),0);
+  let w=0,z=0,r=0,zT=0;
+  active.forEach(o=>{syncContainers(o);w+=o.containers.filter(c=>c.status==='wolne').length;z+=o.containers.filter(c=>c.status==='zarezerwowane').length;r+=o.containers.filter(c=>c.status==='zrealizowane').length;if(o.zaliczka==='tak')zT++;});
+  const archCount=orders.filter(o=>o.archived).length;
   document.getElementById('stats').innerHTML=`
-    <div class="stat"><div class="stat-label">Zamówień</div><div class="stat-value blue">${orders.length}</div><div class="stat-sub">${totC} kontenerów łącznie</div></div>
-    <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">${fmt(totQ,0)}</div><div class="stat-sub">sztuk · ${orders.length} PO</div></div>
+    <div class="stat"><div class="stat-label">Aktywnych zamówień</div><div class="stat-value blue">${active.length}</div><div class="stat-sub">${totC} kontenerów · ${archCount>0?`<span style="color:var(--ink4)">${archCount} w archiwum</span>`:'brak w archiwum'}</div></div>
+    <div class="stat"><div class="stat-label">Ilość modułów</div><div class="stat-value">${fmt(totQ,0)}</div><div class="stat-sub">sztuk · ${active.length} PO</div></div>
     <div class="stat stat-price"><div class="stat-label">Wartość łącznie</div><div class="stat-value green" style="font-size:20px">${fmt(Math.round(tot),0)} €</div><div class="stat-sub">EUR bez VAT</div></div>
-    <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div><div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div></div></div>
-    <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${orders.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
+    <div class="stat"><div class="stat-label">Kontenery</div><div class="stat-dot-row">
+      <div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${w}</span><span class="stat-dot-lbl">wolnych</span></div>
+      <div class="stat-dot-item"><span class="sdot amber"></span><span class="stat-dot-val">${z}</span><span class="stat-dot-lbl">zarezerwowanych</span></div>
+      ${r?`<div class="stat-dot-item"><span class="sdot teal"></span><span class="stat-dot-val">${r}</span><span class="stat-dot-lbl">zrealizowanych</span></div>`:''}
+    </div></div>
+    <div class="stat"><div class="stat-label">Zaliczka</div><div class="stat-dot-row"><div class="stat-dot-item"><span class="sdot green"></span><span class="stat-dot-val">${zT}</span><span class="stat-dot-lbl">opłacone</span></div><div class="stat-dot-item"><span class="sdot red"></span><span class="stat-dot-val">${active.length-zT}</span><span class="stat-dot-lbl">oczekujące</span></div></div></div>`;
 }
 
 /* ════ TABLE ════ */
@@ -1142,7 +1210,11 @@ function renderTable(){
       <td><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></td>
       <td>${sCl}</td>
       <td>${zCol}</td>
-      <td class="td-act"><button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button><button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button></td>
+      <td class="td-act">
+        <button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button class="ibtn" onclick="archiveOrder('${o.id}')" title="Archiwizuj" style="color:var(--ink4)"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="1" y="4" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M1 4l1-3h8l1 3M5 7h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+        <button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
+      </td>
     </tr>`;
     if(isExp)html+=`<tr class="cpanel-row"><td colspan="15"><div class="cpanel">
       <div class="price-col" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--gold2);border-bottom:1px solid var(--gold3)">
@@ -1349,6 +1421,62 @@ function setContDel(oid,idx,f,v){
 }
 
 /* ════ INTERACTIONS ════ */
+function archiveOrder(oid){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może archiwizować');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  o.archived=true;saveData();renderAll();toast('📦 Przeniesiono do archiwum');
+}
+function restoreOrder(oid){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może przywracać');return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  o.archived=false;saveData();renderAll();toast('↩️ Przywrócono do aktywnych');
+}
+
+function renderArchive(){
+  const archived=orders.filter(o=>o.archived);
+  const el=document.getElementById('archive-content');
+  if(!archived.length){
+    el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--ink4);font-size:13px">
+      <div style="font-size:32px;margin-bottom:12px">📦</div>
+      Brak zarchiwizowanych zamówień
+    </div>`;
+    return;
+  }
+  let html='';
+  archived.forEach(o=>{
+    syncContainers(o);
+    const n=getCCount(o);
+    const r=o.containers.filter(c=>c.status==='zrealizowane').length;
+    const z=o.containers.filter(c=>c.status==='zarezerwowane').length;
+    const w=o.containers.filter(c=>c.status==='wolne').length;
+    // Pasek postępu
+    const progress=n>1?`<div class="order-progress" style="margin-top:4px">
+      ${r?`<div class="op-seg op-r" style="flex:${r}" title="${r} zrealizowanych"></div>`:''}
+      ${z?`<div class="op-seg op-z" style="flex:${z}" title="${z} zarezerwowanych"></div>`:''}
+      ${w?`<div class="op-seg op-w" style="flex:${w}" title="${w} wolnych"></div>`:''}
+    </div>`:'';
+    html+=`<div class="arch-card">
+      <div class="arch-card-main">
+        <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
+        <div><div class="dc-model">${o.model}</div><div class="dc-desc">${o.desc||''}</div>${progress}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)">${o.power?o.power+'W':'—'}</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.typ||'—'}</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.rama||'—'}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);text-align:right">${fmt(o.qty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="realized-badge">${r}/${n} ✓</span>
+        </div>
+        <div><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></div>
+        <div class="dc-num price-col" style="font-weight:700;color:var(--gold)">${fmt(o.priceW,3)} €<div style="font-size:9px;color:var(--ink4);font-weight:400">/Wp</div></div>
+        <button class="arch-restore-btn" onclick="restoreOrder('${o.id}')">↩ Przywróć</button>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
+
 function setOrderField(oid, field, value){
   if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;
@@ -1356,8 +1484,6 @@ function setOrderField(oid, field, value){
   saveData();
   renderStats();
 }
-
-function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
 
 function getOrderDeliveryLabel(o){
   syncContainers(o);
@@ -1386,7 +1512,13 @@ function setCont(oid,idx,f,v,silent=false){
   if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;
   syncContainers(o);if(!o.containers[idx])return;
-  o.containers[idx][f]=v;if(getCCount(o)===1)o.status=o.containers[0].status;
+  o.containers[idx][f]=v;
+  if(getCCount(o)===1)o.status=o.containers[0].status;
+  // Auto-archiwizacja gdy wszystkie kontenery zrealizowane
+  if(f==='status'&&isFullyRealized(o)&&!o.archived){
+    o.archived=true;
+    toast('✅ Zamówienie w pełni zrealizowane — przeniesiono do Archiwum');
+  }
   saveData();
   if(!silent){renderAll();}else{renderStats();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
 }
@@ -1394,7 +1526,11 @@ function setZaliczka(oid,v){
   if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;o.zaliczka=v;saveData();renderAll();toast('Zaliczka zaktualizowana ✓');
 }
-function renderAll(){renderStats();renderTable();if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();}
+function renderAll(){
+  renderStats();renderTable();
+  if(document.getElementById('tab-deliveries').classList.contains('active'))renderDeliveries();
+  if(document.getElementById('tab-archive').classList.contains('active'))renderArchive();
+}
 
 /* ════ MODAL ════ */
 function updateHint(){
