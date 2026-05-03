@@ -1145,11 +1145,11 @@ function contPanel(o){
   const nActive=activeContainers.length;
   let h=bulkBarHtml(o.id, n);
   h+=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
-  activeContainers.forEach(({c,i})=>{
+  activeContainers.forEach(({c,i},pos)=>{
     const cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
     h+=`<div class="cont-row">
-      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${pos+1}</span>Kont. ${pos+1}/${nActive}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
