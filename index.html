@@ -418,7 +418,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .del-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .del-card.exp{box-shadow:0 0 0 2px var(--gold2),var(--shadow);border-color:var(--gold);border-left-color:var(--gold)}
 .del-card-main{
-  display:grid;grid-template-columns:200px 1fr 50px 70px 70px 80px 90px 110px 60px 100px 28px;gap:8px;
+  display:grid;grid-template-columns:200px 1fr 50px 70px 70px 90px 110px 60px 100px 28px;gap:12px;
   align-items:center;padding:11px 16px;cursor:pointer;transition:background .15s;
 }
 .del-card-main:hover{background:var(--paper2)}
@@ -1392,7 +1392,7 @@ function renderDeliveryCard(oSlots, dateKey){
       <div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)">${o.power?o.power+'W':'—'}</div>
       <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.typ||'—'}</div>
       <div style="font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--ink)">${o.rama||'—'}</div>
-      <div class="dc-num" style="font-weight:700;color:var(--ink)">${fmt(slotQty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400">szt.</div></div>
+      <div class="dc-num" style="font-weight:700;color:var(--ink);text-align:center">${fmt(slotQty,0)}<div style="font-size:9px;color:var(--ink4);font-weight:400;text-align:center">szt.</div></div>
       <div><span class="dc-cont-label">${contLabel}</span></div>
       <div>${sBdg}</div>
       <div style="display:flex;flex-direction:column;gap:4px">
