@@ -232,13 +232,19 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cpanel-hdr{
   padding:8px 16px 6px;font-size:9px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink4);
-  display:grid;grid-template-columns:130px 65px 140px 200px 1fr;gap:10px;align-items:center;
+  display:grid;grid-template-columns:20px 130px 65px 140px 200px 1fr;gap:10px;align-items:center;
   border-bottom:1px solid var(--border2);
 }
 .cont-row{
-  display:grid;grid-template-columns:130px 65px 140px 200px 1fr;gap:10px;
+  display:grid;grid-template-columns:20px 130px 65px 140px 200px 1fr;gap:10px;
   align-items:center;padding:8px 16px;border-bottom:1px solid var(--border2);transition:background .12s;
 }
+.drag-handle{
+  width:16px;height:30px;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;gap:3px;cursor:grab;flex-shrink:0;opacity:.3;transition:opacity .15s;
+}
+.drag-handle:hover{opacity:.7}
+.drag-handle span{display:block;width:12px;height:2px;background:var(--ink3);border-radius:1px}
 .cont-date{border:1.5px solid var(--border);border-radius:7px;padding:4px 7px;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);background:var(--paper);outline:none;width:100%;transition:.15s;}
 .cont-date:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
 
@@ -1147,11 +1153,17 @@ function contPanel(o){
   const activeContainers=o.containers.map((c,i)=>({c,i})).filter(({c})=>c.status!=='zrealizowane');
   const nActive=activeContainers.length;
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr"><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
+  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Notatka</span></div>`;
+  h+=`<div id="cont-list-${o.id}">`;
   activeContainers.forEach(({c,i},pos)=>{
     const cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row">
+    h+=`<div class="cont-row" draggable="true" data-oid="${o.id}" data-idx="${i}"
+      ondragstart="dragStart(event,'${o.id}',${i})"
+      ondragover="contDragOver(event)"
+      ondragleave="contDragLeave(event)"
+      ondrop="dropCont(event,'${o.id}',${i})">
+      <div class="drag-handle"><span></span><span></span><span></span></div>
       <div class="cont-num"><span class="cbadge${part?' part':''}">${pos+1}</span>Kont. ${pos+1}/${nActive}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
@@ -1159,6 +1171,7 @@ function contPanel(o){
       <div><input class="cont-notes" value="${(c.notes||'').replace(/"/g,'&quot;')}" placeholder="Klient / rezerwacja / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)"></div>
     </div>`;
   });
+  h+=`</div>`;
   return h;
 }
 
@@ -1431,6 +1444,39 @@ function contPanelSlots(o,slots){
     </div>`;
   });
   return h;
+}
+
+/* ════ DRAG & DROP KONTENERÓW ════ */
+let _dragOid=null, _dragIdx=null;
+
+function dragStart(e, oid, idx){
+  _dragOid=oid; _dragIdx=idx;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+}
+function contDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  e.currentTarget.classList.add('drag-over');
+}
+function contDragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+function dropCont(e, oid, toIdx){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  document.querySelectorAll('.cont-row.dragging').forEach(r=>r.classList.remove('dragging'));
+  if(_dragOid!==oid||_dragIdx===toIdx){_dragOid=null;_dragIdx=null;return;}
+  const o=orders.find(x=>x.id===oid);if(!o)return;
+  syncContainers(o);
+  // Przesuń kontener z pozycji _dragIdx na toIdx
+  const moved=o.containers.splice(_dragIdx,1)[0];
+  const newTo=_dragIdx<toIdx?toIdx-1:toIdx;
+  o.containers.splice(newTo,0,moved);
+  _dragOid=null;_dragIdx=null;
+  saveData();
+  renderAll();
+  toast('✓ Kolejność kontenerów zaktualizowana');
 }
 
 function setContDel(oid,idx,f,v){
