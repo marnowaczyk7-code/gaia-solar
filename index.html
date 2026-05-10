@@ -603,19 +603,25 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 }
 .cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 
-/* ── KLIENT / FAKTURA ── */
-.cont-field-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink4);margin-bottom:3px;font-family:'Inter',sans-serif}
-.cont-field-input{
-  border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;
+/* ── POLA KONTENERA ── */
+.cont-field-group{display:flex;flex-direction:column;gap:6px}
+.cont-field-item{display:flex;flex-direction:column;gap:3px}
+.cont-field-label{
+  font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink4);font-family:'Inter',sans-serif;
+}
+.cont-field-input,.cont-number-input{
+  border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;
   font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);
   background:var(--paper);outline:none;width:100%;transition:.15s;
 }
-.cont-field-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
+.cont-number-input{font-family:'JetBrains Mono',monospace;font-size:11px;}
+.cont-field-input:focus,.cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 .cont-notes-large{
   border:1.5px solid var(--border);border-radius:7px;padding:6px 10px;
   font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);
   background:var(--paper);outline:none;width:100%;transition:.15s;
-  resize:vertical;min-height:62px;line-height:1.5;
+  resize:vertical;min-height:78px;line-height:1.5;
 }
 .cont-notes-large:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 
@@ -1243,14 +1249,28 @@ function contPanel(o){
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
-      <div><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)"></div>
-      <div>
-        <div class="cont-field-label">Klient</div>
-        <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
-        <div class="cont-field-label" style="margin-top:6px">Nr faktury</div>
-        <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
+      <div class="cont-field-group">
+        <div class="cont-field-item">
+          <div class="cont-field-label">Nr kontenera</div>
+          <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)">
+        </div>
       </div>
-      <div><textarea class="cont-notes-large" placeholder="Notatki / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
+      <div class="cont-field-group">
+        <div class="cont-field-item">
+          <div class="cont-field-label">Klient</div>
+          <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
+        </div>
+        <div class="cont-field-item">
+          <div class="cont-field-label">Nr faktury</div>
+          <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
+        </div>
+      </div>
+      <div class="cont-field-group">
+        <div class="cont-field-item">
+          <div class="cont-field-label">Notatka</div>
+          <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
+        </div>
+      </div>
     </div>`;
   });
   h+=`</div>`;
@@ -1536,14 +1556,28 @@ function contPanelSlots(o,slots){
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setContDel')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
-      <div><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)"></div>
-      <div>
-        <div class="cont-field-label">Klient</div>
-        <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setContDel('${o.id}',${i},'klient',this.value)">
-        <div class="cont-field-label" style="margin-top:6px">Nr faktury</div>
-        <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setContDel('${o.id}',${i},'faktura',this.value)">
+      <div class="cont-field-group">
+        <div class="cont-field-item">
+          <div class="cont-field-label">Nr kontenera</div>
+          <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)">
+        </div>
       </div>
-      <div><textarea class="cont-notes-large" placeholder="Notatki / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
+      <div class="cont-field-group">
+        <div class="cont-field-item">
+          <div class="cont-field-label">Klient</div>
+          <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setContDel('${o.id}',${i},'klient',this.value)">
+        </div>
+        <div class="cont-field-item">
+          <div class="cont-field-label">Nr faktury</div>
+          <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setContDel('${o.id}',${i},'faktura',this.value)">
+        </div>
+      </div>
+      <div class="cont-field-group">
+        <div class="cont-field-item">
+          <div class="cont-field-label">Notatka</div>
+          <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
+        </div>
+      </div>
     </div>`;
   });
   return h;
