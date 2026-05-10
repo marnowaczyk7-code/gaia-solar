@@ -600,33 +600,20 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 }
 .toast.show{opacity:1;transform:none}
 
-/* ── NUMER KONTENERA ── */
-.cont-number-wrap{display:block;margin-top:4px}
-.cont-number-input{
-  border:1.5px solid var(--border);border-radius:6px;padding:3px 8px;
-  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);
-  background:var(--paper);outline:none;width:100%;transition:.15s;
-}
-.cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
-
 /* ── POLA KONTENERA ── */
-.cont-field-group{display:flex;flex-direction:column;gap:6px;justify-content:center}
-.cont-field-item{display:flex;flex-direction:column;gap:3px}
-.cont-field-label{
-  font-size:9px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.07em;color:var(--ink4);font-family:'Inter',sans-serif;
-}
+.cont-field-group{display:flex;flex-direction:column;gap:6px;align-items:stretch;width:100%}
+.cont-field-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);font-family:'Inter',sans-serif;}
 .cont-field-input,.cont-number-input{
   border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;
-  font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);
-  background:var(--paper);outline:none;width:100%;transition:.15s;box-sizing:border-box;
+  font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);text-align:left;
+  background:var(--paper);outline:none;width:100%;transition:.15s;box-sizing:border-box;display:block;
 }
 .cont-number-input{font-family:'JetBrains Mono',monospace;font-size:11px;}
 .cont-field-input:focus,.cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 .cont-notes-large{
   border:1.5px solid var(--border);border-radius:7px;padding:6px 10px;
-  font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);
-  background:var(--paper);outline:none;width:100%;transition:.15s;
+  font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);text-align:left;
+  background:var(--paper);outline:none;width:100%;transition:.15s;box-sizing:border-box;
   resize:vertical;min-height:78px;line-height:1.5;
 }
 .cont-notes-large:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
