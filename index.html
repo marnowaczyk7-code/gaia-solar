@@ -274,6 +274,8 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .spick-btn:hover{border-color:var(--ink4);color:var(--ink2)}
 .spick-btn.active-rtd{background:#EFF6FF;border-color:#3B82F6;color:#1D4ED8}
 .spick-btn.active-chiny{background:#FFF7ED;border-color:#F97316;color:#C2410C}
+.spick-btn.active-pl{background:#F0FDF4;border-color:#16A34A;color:#15803D}
+.spick-btn.active-eu{background:#F5F3FF;border-color:#7C3AED;color:#6D28D9}
 .spick-btn.active-date{background:var(--gold2);border-color:var(--gold);color:var(--gold-dk)}
 .spick-date{
   border:1.5px solid var(--gold);border-radius:7px;padding:3px 7px;
@@ -296,6 +298,8 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 }
 .cdb-rtd{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
 .cdb-chiny{background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA}
+.cdb-pl{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0}
+.cdb-eu{background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE}
 .cont-row:last-child{border-bottom:none}
 .cont-row:hover{background:rgba(255,255,255,.7)}
 .cont-num{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--ink2)}
@@ -591,14 +595,11 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .toast.show{opacity:1;transform:none}
 
 /* ── NUMER KONTENERA ── */
-.cont-number-wrap{display:none;margin-top:4px}
-.cont-row:hover .cont-number-wrap,
-.cont-row:focus-within .cont-number-wrap{display:block}
+.cont-number-wrap{display:block;margin-top:4px}
 .cont-number-input{
   border:1.5px solid var(--border);border-radius:6px;padding:3px 8px;
   font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);
   background:var(--paper);outline:none;width:100%;transition:.15s;
-  placeholder-color:var(--ink4);
 }
 .cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 
@@ -1147,10 +1148,14 @@ function sumBadge(o,fn){
 function stockPickerHtml(oid, idx, cDate, changeFn){
   const isRTD = cDate==='STOCK_RTD';
   const isChiny = cDate==='STOCK_CHINY';
-  const isDate = !isRTD && !isChiny;
+  const isPL = cDate==='STOCK_PL';
+  const isEU = cDate==='STOCK_EU';
+  const isDate = !isRTD&&!isChiny&&!isPL&&!isEU;
   return `<div class="stock-picker">
-    <button class="spick-btn${isRTD?' active-rtd':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_RTD')">📦 Stock RTD</button>
-    <button class="spick-btn${isChiny?' active-chiny':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_CHINY')">🚢 Stock Chiny</button>
+    <button class="spick-btn${isRTD?' active-rtd':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_RTD')">📦 RTD</button>
+    <button class="spick-btn${isChiny?' active-chiny':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_CHINY')">🚢 Chiny</button>
+    <button class="spick-btn${isPL?' active-pl':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_PL')">🇵🇱 PL</button>
+    <button class="spick-btn${isEU?' active-eu':''}" onclick="${changeFn}('${oid}',${idx},'deliveryDate','STOCK_EU')">🇪🇺 EU</button>
     <button class="spick-btn${isDate&&cDate?' active-date':''}" onclick="showDateInput('${oid}',${idx},'${changeFn}')">📅 Data</button>
     ${isDate?`<input type="date" class="spick-date" value="${cDate||''}" onchange="${changeFn}('${oid}',${idx},'deliveryDate',this.value)" oninput="${changeFn}('${oid}',${idx},'deliveryDate',this.value)">`:``}
   </div>`;
@@ -1165,6 +1170,8 @@ function showDateInput(oid, idx, fn){
 function deliveryDateLabel(d){
   if(d==='STOCK_RTD') return `<span class="cont-del-badge cdb-rtd">📦 Stock RTD</span>`;
   if(d==='STOCK_CHINY') return `<span class="cont-del-badge cdb-chiny">🚢 Stock Chiny</span>`;
+  if(d==='STOCK_PL') return `<span class="cont-del-badge cdb-pl">🇵🇱 Stock PL</span>`;
+  if(d==='STOCK_EU') return `<span class="cont-del-badge cdb-eu">🇪🇺 Stock EU</span>`;
   return d||'—';
 }
 
@@ -1183,8 +1190,10 @@ function bulkBarHtml(oid, n){
   return `<div class="bulk-bar">
     <div class="bulk-label" style="grid-column:1/3">Zastosuj do wszystkich ${n} kontenerów:</div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_RTD');renderAll()">📦 Stock RTD</button>
-      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_CHINY');renderAll()">🚢 Stock Chiny</button>
+      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_RTD');renderAll()">📦 RTD</button>
+      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_CHINY');renderAll()">🚢 Chiny</button>
+      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_PL');renderAll()">🇵🇱 PL</button>
+      <button class="spick-btn" onclick="bulkSetAll('${oid}','deliveryDate','STOCK_EU');renderAll()">🇪🇺 EU</button>
       <span style="font-size:10px;color:var(--ink4);font-family:'Inter',sans-serif">lub data:</span>
       <input type="date" class="spick-date" onchange="bulkSetAll('${oid}','deliveryDate',this.value);renderAll()" oninput="bulkSetAll('${oid}','deliveryDate',this.value);renderAll()">
     </div>
@@ -1313,9 +1322,11 @@ const PLM=['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sie
 
 // Returns list of {order, contIdx, deliveryDate, qty, status, notes} for each container slot
 const TODAY=new Date().toISOString().slice(0,10);
+const STOCK_TYPES=['STOCK_RTD','STOCK_CHINY','STOCK_PL','STOCK_EU'];
+function isStock(d){return STOCK_TYPES.includes(d);}
 function normalizeDate(d){
-  if(!d||d==='STOCK_RTD'||d==='STOCK_CHINY')return d;
-  if(d<TODAY)return TODAY; // przeterminowane → dziś
+  if(!d||isStock(d))return d;
+  if(d<TODAY)return TODAY;
   return d;
 }
 function getContainerSlots(){
@@ -1347,15 +1358,17 @@ function renderDeliveries(){
 
   // Separate stock slots from dated slots
   const stockRTD  = slots.filter(s=>s.deliveryDate==='STOCK_RTD');
+  const stockPL   = slots.filter(s=>s.deliveryDate==='STOCK_PL');
+  const stockEU   = slots.filter(s=>s.deliveryDate==='STOCK_EU');
   const stockChiny= slots.filter(s=>s.deliveryDate==='STOCK_CHINY');
-  const dated     = slots.filter(s=>s.deliveryDate!=='STOCK_RTD'&&s.deliveryDate!=='STOCK_CHINY');
+  const dated     = slots.filter(s=>!isStock(s.deliveryDate));
 
   let html='';
 
-  // ── STOCK RTD (na początku) ──
-  if(stockRTD.length){
-    html+=renderStockSection('STOCK_RTD','📦 Stock RTD','ssb-rtd','#3B82F6',stockRTD);
-  }
+  // ── STOCK na początku (RTD, PL, EU) ──
+  if(stockRTD.length) html+=renderStockSection('STOCK_RTD','📦 Stock RTD','ssb-rtd','#3B82F6',stockRTD);
+  if(stockPL.length)  html+=renderStockSection('STOCK_PL','🇵🇱 Stock PL','ssb-rtd','#16A34A',stockPL);
+  if(stockEU.length)  html+=renderStockSection('STOCK_EU','🇪🇺 Stock EU','ssb-rtd','#7C3AED',stockEU);
 
   // ── DATED DELIVERIES ──
   const byM={};
@@ -1689,29 +1702,33 @@ function getOrderDeliveryLabel(o){
   const dates=o.containers.map(c=>c.deliveryDate||o.deliveryDate||'');
   const allRTD=dates.every(d=>d==='STOCK_RTD');
   const allChiny=dates.every(d=>d==='STOCK_CHINY');
+  const allPL=dates.every(d=>d==='STOCK_PL');
+  const allEU=dates.every(d=>d==='STOCK_EU');
   const anyRTD=dates.some(d=>d==='STOCK_RTD');
   const anyChiny=dates.some(d=>d==='STOCK_CHINY');
-  const realDates=dates.filter(d=>d&&d!=='STOCK_RTD'&&d!=='STOCK_CHINY');
+  const anyPL=dates.some(d=>d==='STOCK_PL');
+  const anyEU=dates.some(d=>d==='STOCK_EU');
+  const realDates=dates.filter(d=>d&&!isStock(d));
   const firstDate=realDates.sort()[0]||'';
 
   let stockLine='';
-  if(allRTD) stockLine=`<div style="font-size:9px;font-weight:700;color:#1D4ED8;font-family:'Inter',sans-serif;letter-spacing:.03em">📦 Stock RTD</div>`;
-  else if(allChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#C2410C;font-family:'Inter',sans-serif;letter-spacing:.03em">🚢 Stock Chiny</div>`;
-  else if(anyRTD&&anyChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#6B7280;font-family:'Inter',sans-serif">📦+🚢 Mix</div>`;
-  else if(anyRTD) stockLine=`<div style="font-size:9px;font-weight:700;color:#1D4ED8;font-family:'Inter',sans-serif;letter-spacing:.03em">📦 Stock RTD</div>`;
-  else if(anyChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#C2410C;font-family:'Inter',sans-serif;letter-spacing:.03em">🚢 Stock Chiny</div>`;
+  if(allRTD) stockLine=`<div style="font-size:9px;font-weight:700;color:#1D4ED8;font-family:'Inter',sans-serif">📦 Stock RTD</div>`;
+  else if(allChiny) stockLine=`<div style="font-size:9px;font-weight:700;color:#C2410C;font-family:'Inter',sans-serif">🚢 Stock Chiny</div>`;
+  else if(allPL) stockLine=`<div style="font-size:9px;font-weight:700;color:#15803D;font-family:'Inter',sans-serif">🇵🇱 Stock PL</div>`;
+  else if(allEU) stockLine=`<div style="font-size:9px;font-weight:700;color:#6D28D9;font-family:'Inter',sans-serif">🇪🇺 Stock EU</div>`;
+  else if(anyRTD||anyChiny||anyPL||anyEU) stockLine=`<div style="font-size:9px;font-weight:700;color:#6B7280;font-family:'Inter',sans-serif">Mix</div>`;
 
   const dateLine=firstDate?`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink3)">${firstDate}</div>`:`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink4)">—</div>`;
 
   return stockLine+dateLine;
 }
 const debT={};
-function setContDebounced(oid,idx,f,v){clearTimeout(debT[oid+idx+f]);debT[oid+idx+f]=setTimeout(()=>setCont(oid,idx,f,v,true),600);}
-function setCont(oid,idx,f,v,silent=false){
+function setContDebounced(oid,idx,f,v){clearTimeout(debT[oid+idx+f]);debT[oid+idx+f]=setTimeout(()=>setCont(oid,idx,f,v,true,true),600);}
+function setCont(oid,idx,f,v,silent=false,noUndo=false){
   if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
   const o=orders.find(x=>x.id===oid);if(!o)return;
   syncContainers(o);if(!o.containers[idx])return;
-  pushUndo();
+  if(!noUndo)pushUndo();
   o.containers[idx][f]=v;
   if(getCCount(o)===1)o.status=o.containers[0].status;
   saveData();
@@ -1868,15 +1885,19 @@ function showPreview(d, rawText){
 
   // Ukryte pole przechowujące wartość deliveryDate
   const deliveryVal=d.deliveryDate||'';
-  const isRTD=deliveryVal==='STOCK_RTD', isChiny=deliveryVal==='STOCK_CHINY', isDate=!isRTD&&!isChiny;
+  const isRTD=deliveryVal==='STOCK_RTD', isChiny=deliveryVal==='STOCK_CHINY';
+  const isPL=deliveryVal==='STOCK_PL', isEU=deliveryVal==='STOCK_EU';
+  const isDate=!isRTD&&!isChiny&&!isPL&&!isEU;
 
   const deliveryPickerHtml=`
     <div class="ip-field" style="grid-column:1/-1">
       <div class="ip-label">Termin dostawy (CRD)</div>
       <input type="hidden" id="ip-deliveryDate" value="${deliveryVal}">
       <div class="stock-picker" style="margin-top:2px">
-        <button class="spick-btn${isRTD?' active-rtd':''}" id="imp-rtd" onclick="setImportDelivery('STOCK_RTD')">📦 Stock RTD</button>
-        <button class="spick-btn${isChiny?' active-chiny':''}" id="imp-chiny" onclick="setImportDelivery('STOCK_CHINY')">🚢 Stock Chiny</button>
+        <button class="spick-btn${isRTD?' active-rtd':''}" id="imp-rtd" onclick="setImportDelivery('STOCK_RTD')">📦 RTD</button>
+        <button class="spick-btn${isChiny?' active-chiny':''}" id="imp-chiny" onclick="setImportDelivery('STOCK_CHINY')">🚢 Chiny</button>
+        <button class="spick-btn${isPL?' active-pl':''}" id="imp-pl" onclick="setImportDelivery('STOCK_PL')">🇵🇱 PL</button>
+        <button class="spick-btn${isEU?' active-eu':''}" id="imp-eu" onclick="setImportDelivery('STOCK_EU')">🇪🇺 EU</button>
         <button class="spick-btn${isDate&&deliveryVal?' active-date':''}" id="imp-date-btn" onclick="setImportDelivery('DATE')">📅 Data</button>
         <input type="date" class="spick-date" id="imp-date-input" value="${isDate?deliveryVal:''}" style="${isDate?'':'display:none'}" onchange="setImportDelivery(this.value)" oninput="setImportDelivery(this.value)">
       </div>
@@ -1910,37 +1931,19 @@ function setImportDelivery(val){
   const hidden=document.getElementById('ip-deliveryDate');
   const btnRTD=document.getElementById('imp-rtd');
   const btnChiny=document.getElementById('imp-chiny');
+  const btnPL=document.getElementById('imp-pl');
+  const btnEU=document.getElementById('imp-eu');
   const btnDate=document.getElementById('imp-date-btn');
   const inputDate=document.getElementById('imp-date-input');
   if(!hidden)return;
-
-  if(val==='STOCK_RTD'){
-    hidden.value='STOCK_RTD';
-    btnRTD.className='spick-btn active-rtd';
-    btnChiny.className='spick-btn';
-    btnDate.className='spick-btn';
-    inputDate.style.display='none';
-  } else if(val==='STOCK_CHINY'){
-    hidden.value='STOCK_CHINY';
-    btnRTD.className='spick-btn';
-    btnChiny.className='spick-btn active-chiny';
-    btnDate.className='spick-btn';
-    inputDate.style.display='none';
-  } else if(val==='DATE'){
-    hidden.value='';
-    btnRTD.className='spick-btn';
-    btnChiny.className='spick-btn';
-    btnDate.className='spick-btn active-date';
-    inputDate.style.display='';
-    inputDate.focus();
-  } else {
-    // konkretna data
-    hidden.value=val;
-    btnRTD.className='spick-btn';
-    btnChiny.className='spick-btn';
-    btnDate.className=val?'spick-btn active-date':'spick-btn';
-    inputDate.style.display='';
-  }
+  [btnRTD,btnChiny,btnPL,btnEU,btnDate].forEach(b=>{if(b)b.className='spick-btn';});
+  if(inputDate)inputDate.style.display='none';
+  if(val==='STOCK_RTD'){hidden.value='STOCK_RTD';if(btnRTD)btnRTD.className='spick-btn active-rtd';}
+  else if(val==='STOCK_CHINY'){hidden.value='STOCK_CHINY';if(btnChiny)btnChiny.className='spick-btn active-chiny';}
+  else if(val==='STOCK_PL'){hidden.value='STOCK_PL';if(btnPL)btnPL.className='spick-btn active-pl';}
+  else if(val==='STOCK_EU'){hidden.value='STOCK_EU';if(btnEU)btnEU.className='spick-btn active-eu';}
+  else if(val==='DATE'){hidden.value='';if(btnDate)btnDate.className='spick-btn active-date';if(inputDate){inputDate.style.display='';inputDate.focus();}}
+  else{hidden.value=val;if(btnDate)btnDate.className=val?'spick-btn active-date':'spick-btn';if(inputDate)inputDate.style.display='';}
 }
 
 function importConfirm(){
