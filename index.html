@@ -232,11 +232,11 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cpanel-hdr{
   padding:8px 16px 6px;font-size:9px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink4);
-  display:grid;grid-template-columns:20px 130px 65px 140px 200px 220px minmax(180px,1fr);gap:10px;align-items:center;
+  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:10px;align-items:center;
   border-bottom:1px solid var(--border2);
 }
 .cont-row{
-  display:grid;grid-template-columns:20px 130px 65px 140px 200px 220px minmax(180px,1fr);gap:10px;
+  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:10px;
   align-items:start;padding:10px 16px;border-bottom:1px solid var(--border2);transition:background .12s;
 }
 .drag-handle{
@@ -1228,7 +1228,7 @@ function contPanel(o){
   const activeContainers=o.containers.map((c,i)=>({c,i})).filter(({c})=>c.status!=='zrealizowane');
   const nActive=activeContainers.length;
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Klient / Nr faktury</span><span>Notatka</span></div>`;
+  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Nr kontenera</span><span>Klient / Nr faktury</span><span>Notatka</span></div>`;
   h+=`<div id="cont-list-${o.id}">`;
   activeContainers.forEach(({c,i},pos)=>{
     const cq=getContQty(o,i),part=i===n-1&&cq<cap;
@@ -1239,19 +1239,18 @@ function contPanel(o){
       ondragleave="contDragLeave(event)"
       ondrop="dropCont(event,'${o.id}',${i})">
       <div class="drag-handle"><span></span><span></span><span></span></div>
-      <div class="cont-num"><span class="cbadge${part?' part':''}">${pos+1}</span>Kont. ${pos+1}/${nActive}${part?' <small style="color:var(--ink4)">(niekompletny)</small>':''}<div style="margin-top:4px"><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="Nr kontenera…" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)"></div></div>
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${pos+1}</span>Kont. ${pos+1}/${nActive}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
+      <div><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)"></div>
       <div>
         <div class="cont-field-label">Klient</div>
         <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
         <div class="cont-field-label" style="margin-top:6px">Nr faktury</div>
         <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
       </div>
-      <div>
-        <textarea class="cont-notes-large" placeholder="Notatki / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
-      </div>
+      <div><textarea class="cont-notes-large" placeholder="Notatki / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
     </div>`;
   });
   h+=`</div>`;
@@ -1527,25 +1526,24 @@ function delDateToggleExp(oid,dateKey){
 function contPanelSlots(o,slots){
   const cap=getCap(o.power||parsePower(o.desc)),n=getCCount(o);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Klient / Nr faktury</span><span>Notatka</span></div>`;
+  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Nr kontenera</span><span>Klient / Nr faktury</span><span>Notatka</span></div>`;
   slots.forEach(s=>{
     const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
     h+=`<div class="cont-row">
       <div></div>
-      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}<div style="margin-top:4px"><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="Nr kontenera…" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)"></div></div>
+      <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setContDel')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
+      <div><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)"></div>
       <div>
         <div class="cont-field-label">Klient</div>
         <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setContDel('${o.id}',${i},'klient',this.value)">
         <div class="cont-field-label" style="margin-top:6px">Nr faktury</div>
         <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setContDel('${o.id}',${i},'faktura',this.value)">
       </div>
-      <div>
-        <textarea class="cont-notes-large" placeholder="Notatki / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
-      </div>
+      <div><textarea class="cont-notes-large" placeholder="Notatki / uwagi…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
     </div>`;
   });
   return h;
