@@ -241,7 +241,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
   display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:0;
   align-items:start;border-bottom:1px solid var(--border2);transition:background .12s;
 }
-.cont-row>*{padding:10px 12px;border-right:1px solid var(--border2)}
+.cont-row>*{padding:10px 10px;border-right:1px solid var(--border2)}
 .cont-row>*:last-child{border-right:none}
 .cont-row:last-child{border-bottom:none}
 .cont-row:hover{background:rgba(255,255,255,.7)}
@@ -610,7 +610,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
 
 /* ── POLA KONTENERA ── */
-.cont-field-group{display:flex;flex-direction:column;gap:6px}
+.cont-field-group{display:flex;flex-direction:column;gap:6px;justify-content:center}
 .cont-field-item{display:flex;flex-direction:column;gap:3px}
 .cont-field-label{
   font-size:9px;font-weight:700;text-transform:uppercase;
@@ -619,7 +619,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cont-field-input,.cont-number-input{
   border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;
   font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);
-  background:var(--paper);outline:none;width:100%;transition:.15s;
+  background:var(--paper);outline:none;width:100%;transition:.15s;box-sizing:border-box;
 }
 .cont-number-input{font-family:'JetBrains Mono',monospace;font-size:11px;}
 .cont-field-input:focus,.cont-number-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold2)}
