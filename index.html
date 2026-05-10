@@ -230,15 +230,21 @@ tbody tr.mrow:hover .td-act{opacity:1}
 tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cpanel{background:var(--paper2);border-top:1px solid var(--border);border-left:3px solid var(--gold)}
 .cpanel-hdr{
-  padding:8px 16px 6px;font-size:9px;font-weight:700;letter-spacing:.1em;
+  padding:0;font-size:9px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink4);
-  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:10px;align-items:center;
-  border-bottom:1px solid var(--border2);
+  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:0;align-items:center;
+  border-bottom:2px solid var(--border);
 }
+.cpanel-hdr>*{padding:7px 12px;border-right:1px solid var(--border2)}
+.cpanel-hdr>*:last-child{border-right:none}
 .cont-row{
-  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:10px;
-  align-items:start;padding:10px 16px;border-bottom:1px solid var(--border2);transition:background .12s;
+  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:0;
+  align-items:start;border-bottom:1px solid var(--border2);transition:background .12s;
 }
+.cont-row>*{padding:10px 12px;border-right:1px solid var(--border2)}
+.cont-row>*:last-child{border-right:none}
+.cont-row:last-child{border-bottom:none}
+.cont-row:hover{background:rgba(255,255,255,.7)}
 .drag-handle{
   width:16px;height:30px;display:flex;flex-direction:column;justify-content:center;
   align-items:center;gap:3px;cursor:grab;flex-shrink:0;opacity:.3;transition:opacity .15s;
@@ -799,8 +805,10 @@ body.no-prices .tab-btn[data-tab="archive"] { display:none !important; }
       <button class="fbtn active" data-f="" data-ft="dport" onclick="setDelFilter(this)">Wszystkie porty</button>
       <button class="fbtn" data-f="Rotterdam" data-ft="dport" onclick="setDelFilter(this)">Rotterdam</button>
       <button class="fbtn" data-f="Gdańsk" data-ft="dport" onclick="setDelFilter(this)">Gdańsk</button>
-      <div style="flex:1"></div>
-      <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">← kliknij kartę aby zobaczyć kontenery</span>
+      <div class="search" style="flex:1;max-width:360px">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#475569" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="del-search" placeholder="Szukaj po NLM, modelu, kliencie…" oninput="renderDeliveries()">
+      </div>
     </div>
     <div id="del-content"></div>
   </div>
@@ -810,9 +818,11 @@ body.no-prices .tab-btn[data-tab="archive"] { display:none !important; }
 <div id="tab-archive" class="tab-content">
   <div class="del-wrap">
     <div class="del-toolbar">
-      <span style="font-size:12px;color:var(--ink3);font-family:'Inter',sans-serif;font-weight:500">Zamówienia w pełni zrealizowane lub ręcznie przeniesione do archiwum</span>
-      <div style="flex:1"></div>
-      <span style="font-size:11px;color:var(--ink4);font-family:'Inter',sans-serif">Archiwum nie usuwa danych — możesz przywrócić zamówienie w każdej chwili</span>
+      <span style="font-size:12px;color:var(--ink3);font-family:'Inter',sans-serif;font-weight:500">Zrealizowane kontenery i zarchiwizowane zamówienia</span>
+      <div class="search" style="flex:1;max-width:360px;margin-left:16px">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#475569" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="arch-search" placeholder="Szukaj po NLM, modelu, kliencie…" oninput="renderArchive()">
+      </div>
     </div>
     <div id="archive-content"></div>
   </div>
@@ -1250,26 +1260,14 @@ function contPanel(o){
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
       <div class="cont-field-group">
-        <div class="cont-field-item">
-          <div class="cont-field-label">Nr kontenera</div>
-          <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)">
-        </div>
+        <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)">
       </div>
       <div class="cont-field-group">
-        <div class="cont-field-item">
-          <div class="cont-field-label">Klient</div>
-          <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
-        </div>
-        <div class="cont-field-item">
-          <div class="cont-field-label">Nr faktury</div>
-          <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
-        </div>
+        <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
+        <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="Nr faktury…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
       </div>
-      <div class="cont-field-group">
-        <div class="cont-field-item">
-          <div class="cont-field-label">Notatka</div>
-          <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
-        </div>
+      <div>
+        <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
       </div>
     </div>`;
   });
@@ -1373,6 +1371,7 @@ function normalizeDate(d){
   return d;
 }
 function getContainerSlots(){
+  const q=(document.getElementById('del-search')?.value||'').toLowerCase();
   const slots=[];
   orders.forEach(o=>{
     syncContainers(o);
@@ -1394,7 +1393,13 @@ function getContainerSlots(){
     }
   });
   // Include stock slots (STOCK_RTD, STOCK_CHINY) and dated slots; exclude empty
-  return slots.filter(s=>s.deliveryDate);
+  return slots.filter(s=>{
+    if(!q)return true;
+    const o=s.order;
+    const c=o.containers[s.contIdx];
+    return [o.nlm,o.model,o.producent,o.desc,o.port,c?.klient,c?.faktura,c?.notes,c?.containerNumber]
+      .some(v=>String(v||'').toLowerCase().includes(q));
+  });
 }
 
 function renderDeliveries(){
@@ -1557,26 +1562,14 @@ function contPanelSlots(o,slots){
       <div>${stockPickerHtml(o.id,i,cDate,'setContDel')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
       <div class="cont-field-group">
-        <div class="cont-field-item">
-          <div class="cont-field-label">Nr kontenera</div>
-          <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)">
-        </div>
+        <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)">
       </div>
       <div class="cont-field-group">
-        <div class="cont-field-item">
-          <div class="cont-field-label">Klient</div>
-          <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setContDel('${o.id}',${i},'klient',this.value)">
-        </div>
-        <div class="cont-field-item">
-          <div class="cont-field-label">Nr faktury</div>
-          <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="np. FV/2026/001" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setContDel('${o.id}',${i},'faktura',this.value)">
-        </div>
+        <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setContDel('${o.id}',${i},'klient',this.value)">
+        <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="Nr faktury…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setContDel('${o.id}',${i},'faktura',this.value)">
       </div>
-      <div class="cont-field-group">
-        <div class="cont-field-item">
-          <div class="cont-field-label">Notatka</div>
-          <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
-        </div>
+      <div>
+        <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
       </div>
     </div>`;
   });
@@ -1640,6 +1633,17 @@ async function restoreOrder(oid){
 
 function renderArchive(){
   const el=document.getElementById('archive-content');
+  const q=(document.getElementById('arch-search')?.value||'').toLowerCase();
+
+  const matchOrder=o=>{
+    if(!q)return true;
+    return [o.nlm,o.model,o.producent,o.desc,o.port,o.typ,o.rama,
+      ...o.containers.map(c=>c.klient),
+      ...o.containers.map(c=>c.faktura),
+      ...o.containers.map(c=>c.containerNumber),
+      ...o.containers.map(c=>c.notes)
+    ].some(v=>String(v||'').toLowerCase().includes(q));
+  };
 
   // Zbierz wszystkie zrealizowane kontenery ze wszystkich zamówień
   const slots=[];
@@ -1674,7 +1678,7 @@ function renderArchive(){
   let html='';
 
   // Zrealizowane kontenery (per zamówienie)
-  Object.values(byOrder).forEach(({order:o, slots:oSlots})=>{
+  Object.values(byOrder).filter(({order})=>matchOrder(order)).forEach(({order:o, slots:oSlots})=>{
     const n=getCCount(o);
     const rQ=oSlots.reduce((s,x)=>s+x.qty,0);
     const totalQ=o.qty;
@@ -1725,7 +1729,7 @@ function renderArchive(){
   });
 
   // Ręcznie zarchiwizowane całe zamówienia
-  fullArchived.forEach(o=>{
+  fullArchived.filter(o=>matchOrder(o)).forEach(o=>{
     html+=`<div class="arch-card" style="opacity:.7">
       <div class="arch-card-main">
         <div><div class="dc-prod">${o.producent||'—'}</div><div class="dc-nlm">${o.nlm}</div></div>
