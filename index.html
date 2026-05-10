@@ -1335,13 +1335,16 @@ function getContainerSlots(){
     syncContainers(o);
     const n=getCCount(o);
     if(n<=1){
-      const date=normalizeDate((o.containers[0]?.deliveryDate)||o.deliveryDate||'');
+      const c=o.containers[0];
+      if(c?.status==='zrealizowane')return; // pomiń zrealizowane
+      const date=normalizeDate(c?.deliveryDate||o.deliveryDate||'');
       if(!filterDelPort||o.port===filterDelPort)
         slots.push({order:o,contIdx:0,deliveryDate:date,qty:o.qty,total:n});
     } else {
       for(let i=0;i<n;i++){
         const c=o.containers[i];
-        const date=normalizeDate(c.deliveryDate||o.deliveryDate||'');
+        if(c?.status==='zrealizowane')continue; // pomiń zrealizowane
+        const date=normalizeDate(c?.deliveryDate||o.deliveryDate||'');
         if(!filterDelPort||o.port===filterDelPort)
           slots.push({order:o,contIdx:i,deliveryDate:date,qty:getContQty(o,i),total:n});
       }
