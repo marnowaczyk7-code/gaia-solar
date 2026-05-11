@@ -1240,44 +1240,49 @@ function bulkBarHtml(oid, n){
 }
 
 /* ════ RESIZE KOLUMN ════ */
-function getColWidths(oid){
-  try{return JSON.parse(localStorage.getItem('col-w-'+oid))||null;}catch{return null;}
+const COL_KEY='cont-col-widths';
+function getColWidths(){
+  try{return JSON.parse(localStorage.getItem(COL_KEY))||null;}catch{return null;}
 }
-function saveColWidths(oid,widths){
-  try{localStorage.setItem('col-w-'+oid,JSON.stringify(widths));}catch{}
+function saveColWidths(widths){
+  try{localStorage.setItem(COL_KEY,JSON.stringify(widths));}catch{}
 }
 function defaultColWidths(){return [20,100,55,140,200,140,220,200];}
 function colTemplate(widths){
   return widths.map((w,i)=>i===widths.length-1?`minmax(${w}px,1fr)`:`${w}px`).join(' ');
 }
-function renderColHeaders(oid){
+function applyColWidths(widths){
+  const tmpl=colTemplate(widths);
+  document.querySelectorAll('.cont-col-row').forEach(el=>{
+    el.style.gridTemplateColumns=tmpl;
+  });
+}
+function renderColHeaders(){
   const cols=['','Kontener','Ilość','Data dostawy','Status','Nr kontenera','Klient / Nr faktury','Notatka'];
   return cols.map((label,i)=>{
-    const resizer=i>0&&i<cols.length-1?`<span class="col-resize" onmousedown="startColResize(event,'${oid}',${i})"></span>`:'';
+    const resizer=i>0&&i<cols.length-1?`<span class="col-resize" onmousedown="startColResize(event,${i})"></span>`:'';
     return `<span>${label}${resizer}</span>`;
   }).join('');
 }
 let _colResize={active:false};
-function startColResize(e,oid,colIdx){
+function startColResize(e,colIdx){
   e.preventDefault();e.stopPropagation();
-  const widths=getColWidths(oid)||defaultColWidths();
+  const widths=getColWidths()||defaultColWidths();
   const startX=e.clientX, startW=widths[colIdx];
   const handle=e.currentTarget;
   handle.classList.add('dragging');
-  _colResize={active:true,oid,colIdx,startX,startW,widths:[...widths]};
+  _colResize={active:true,colIdx,startX,startW,widths:[...widths]};
   function onMove(ev){
     if(!_colResize.active)return;
     const newW=Math.max(50,_colResize.startW+(ev.clientX-_colResize.startX));
     _colResize.widths[_colResize.colIdx]=Math.round(newW);
-    document.querySelectorAll(`[data-col-oid="${oid}"]`).forEach(el=>{
-      el.style.gridTemplateColumns=colTemplate(_colResize.widths);
-    });
+    applyColWidths(_colResize.widths);
   }
   function onUp(){
     if(!_colResize.active)return;
     _colResize.active=false;
     handle.classList.remove('dragging');
-    saveColWidths(oid,_colResize.widths);
+    saveColWidths(_colResize.widths);
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
   }
@@ -1289,15 +1294,15 @@ function contPanel(o){
   const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
   const activeContainers=o.containers.map((c,i)=>({c,i})).filter(({c})=>c.status!=='zrealizowane');
   const nActive=activeContainers.length;
-  const widths=getColWidths(o.id)||defaultColWidths();
+  const widths=getColWidths()||defaultColWidths();
   const tmpl=colTemplate(widths);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}">${renderColHeaders(o.id)}</div>`;
+  h+=`<div class="cpanel-hdr" class="cont-col-row" style="grid-template-columns:${tmpl}">${renderColHeaders()}</div>`;
   h+=`<div id="cont-list-${o.id}">`;
   activeContainers.forEach(({c,i},pos)=>{
     const cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row" draggable="true" data-oid="${o.id}" data-idx="${i}" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}"
+    h+=`<div class="cont-row" draggable="true" data-oid="${o.id}" data-idx="${i}" class="cont-col-row" style="grid-template-columns:${tmpl}"
       ondragstart="dragStart(event,'${o.id}',${i})"
       ondragover="contDragOver(event)"
       ondragleave="contDragLeave(event)"
@@ -1594,14 +1599,14 @@ function delDateToggleExp(oid,dateKey){
 
 function contPanelSlots(o,slots){
   const cap=getCap(o.power||parsePower(o.desc)),n=getCCount(o);
-  const widths=getColWidths(o.id)||defaultColWidths();
+  const widths=getColWidths()||defaultColWidths();
   const tmpl=colTemplate(widths);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}">${renderColHeaders(o.id)}</div>`;
+  h+=`<div class="cpanel-hdr" class="cont-col-row" style="grid-template-columns:${tmpl}">${renderColHeaders()}</div>`;
   slots.forEach(s=>{
     const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}">
+    h+=`<div class="cont-row" class="cont-col-row" style="grid-template-columns:${tmpl}">
       <div></div>
       <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
