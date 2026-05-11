@@ -1239,6 +1239,52 @@ function bulkBarHtml(oid, n){
   </div>`;
 }
 
+/* ════ RESIZE KOLUMN ════ */
+function getColWidths(oid){
+  try{return JSON.parse(localStorage.getItem('col-w-'+oid))||null;}catch{return null;}
+}
+function saveColWidths(oid,widths){
+  try{localStorage.setItem('col-w-'+oid,JSON.stringify(widths));}catch{}
+}
+function defaultColWidths(){return [20,100,55,140,200,140,220,200];}
+function colTemplate(widths){
+  return widths.map((w,i)=>i===widths.length-1?`minmax(${w}px,1fr)`:`${w}px`).join(' ');
+}
+function renderColHeaders(oid){
+  const cols=['','Kontener','Ilość','Data dostawy','Status','Nr kontenera','Klient / Nr faktury','Notatka'];
+  return cols.map((label,i)=>{
+    const resizer=i>0&&i<cols.length-1?`<span class="col-resize" onmousedown="startColResize(event,'${oid}',${i})"></span>`:'';
+    return `<span>${label}${resizer}</span>`;
+  }).join('');
+}
+let _colResize={active:false};
+function startColResize(e,oid,colIdx){
+  e.preventDefault();e.stopPropagation();
+  const widths=getColWidths(oid)||defaultColWidths();
+  const startX=e.clientX, startW=widths[colIdx];
+  const handle=e.currentTarget;
+  handle.classList.add('dragging');
+  _colResize={active:true,oid,colIdx,startX,startW,widths:[...widths]};
+  function onMove(ev){
+    if(!_colResize.active)return;
+    const newW=Math.max(50,_colResize.startW+(ev.clientX-_colResize.startX));
+    _colResize.widths[_colResize.colIdx]=Math.round(newW);
+    document.querySelectorAll(`[data-col-oid="${oid}"]`).forEach(el=>{
+      el.style.gridTemplateColumns=colTemplate(_colResize.widths);
+    });
+  }
+  function onUp(){
+    if(!_colResize.active)return;
+    _colResize.active=false;
+    handle.classList.remove('dragging');
+    saveColWidths(oid,_colResize.widths);
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
 function contPanel(o){
   const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
   const activeContainers=o.containers.map((c,i)=>({c,i})).filter(({c})=>c.status!=='zrealizowane');
