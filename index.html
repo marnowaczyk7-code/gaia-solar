@@ -1297,12 +1297,12 @@ function contPanel(o){
   const widths=getColWidths()||defaultColWidths();
   const tmpl=colTemplate(widths);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr" class="cont-col-row" style="grid-template-columns:${tmpl}">${renderColHeaders()}</div>`;
+  h+=`<div class="cpanel-hdr cont-col-row" style="grid-template-columns:${tmpl}">${renderColHeaders()}</div>`;
   h+=`<div id="cont-list-${o.id}">`;
   activeContainers.forEach(({c,i},pos)=>{
     const cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row" draggable="true" data-oid="${o.id}" data-idx="${i}" class="cont-col-row" style="grid-template-columns:${tmpl}"
+    h+=`<div class="cont-row cont-col-row" draggable="true" data-oid="${o.id}" data-idx="${i}" style="grid-template-columns:${tmpl}"
       ondragstart="dragStart(event,'${o.id}',${i})"
       ondragover="contDragOver(event)"
       ondragleave="contDragLeave(event)"
@@ -1602,11 +1602,11 @@ function contPanelSlots(o,slots){
   const widths=getColWidths()||defaultColWidths();
   const tmpl=colTemplate(widths);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr" class="cont-col-row" style="grid-template-columns:${tmpl}">${renderColHeaders()}</div>`;
+  h+=`<div class="cpanel-hdr cont-col-row" style="grid-template-columns:${tmpl}">${renderColHeaders()}</div>`;
   slots.forEach(s=>{
     const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row" class="cont-col-row" style="grid-template-columns:${tmpl}">
+    h+=`<div class="cont-row cont-col-row" style="grid-template-columns:${tmpl}">
       <div></div>
       <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
