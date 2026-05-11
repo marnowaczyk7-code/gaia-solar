@@ -1307,12 +1307,12 @@ function contPanel(o){
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
-      <div class="cont-field-group"><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)"></div>
+      <div class="cont-field-group"><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value,true)"></div>
       <div class="cont-field-group">
-        <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
-        <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="Nr faktury…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
+        <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value,true)">
+        <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="Nr faktury…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value,true)">
       </div>
-      <div><textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
+      <div><textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value,true)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
     </div>`;
   });
   h+=`</div>`;
