@@ -239,7 +239,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cpanel-hdr>*:last-child{border-right:none}
 .cont-row{
   display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:0;
-  align-items:start;border-bottom:1px solid var(--border2);transition:background .12s;
+  align-items:center;border-bottom:1px solid var(--border2);transition:background .12s;
 }
 .cont-row>*{padding:10px 10px;border-right:1px solid var(--border2)}
 .cont-row>*:last-child{border-right:none}
@@ -601,7 +601,7 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .toast.show{opacity:1;transform:none}
 
 /* ── POLA KONTENERA ── */
-.cont-field-group{display:flex;flex-direction:column;gap:6px;align-items:stretch;width:100%}
+.cont-field-group{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:0;}
 .cont-field-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);font-family:'Inter',sans-serif;}
 .cont-field-input,.cont-number-input{
   border:1.5px solid var(--border);border-radius:7px;padding:6px 9px;
