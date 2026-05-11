@@ -232,11 +232,24 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 .cpanel-hdr{
   padding:0;font-size:9px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink4);
-  display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:0;align-items:center;
+  display:grid;gap:0;align-items:center;
   border-bottom:2px solid var(--border);
+  user-select:none;
 }
-.cpanel-hdr>*{padding:7px 12px;border-right:1px solid var(--border2)}
+.cpanel-hdr>*{padding:7px 10px;border-right:1px solid var(--border2);position:relative}
 .cpanel-hdr>*:last-child{border-right:none}
+
+/* ── RESIZE HANDLE ── */
+.col-resize{
+  position:absolute;right:-3px;top:0;bottom:0;width:6px;
+  cursor:col-resize;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+}
+.col-resize::after{
+  content:'';display:block;width:2px;height:14px;
+  background:var(--border);border-radius:1px;transition:background .15s;
+}
+.col-resize:hover::after,.col-resize.dragging::after{background:var(--gold);}
 .cont-row{
   display:grid;grid-template-columns:20px 100px 55px 140px 200px 140px 220px minmax(160px,1fr);gap:0;
   align-items:center;border-bottom:1px solid var(--border2);transition:background .12s;
@@ -1230,13 +1243,15 @@ function contPanel(o){
   const n=getCCount(o),cap=getCap(o.power||parsePower(o.desc));
   const activeContainers=o.containers.map((c,i)=>({c,i})).filter(({c})=>c.status!=='zrealizowane');
   const nActive=activeContainers.length;
+  const widths=getColWidths(o.id)||defaultColWidths();
+  const tmpl=colTemplate(widths);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Nr kontenera</span><span>Klient / Nr faktury</span><span>Notatka</span></div>`;
+  h+=`<div class="cpanel-hdr" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}">${renderColHeaders(o.id)}</div>`;
   h+=`<div id="cont-list-${o.id}">`;
   activeContainers.forEach(({c,i},pos)=>{
     const cq=getContQty(o,i),part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row" draggable="true" data-oid="${o.id}" data-idx="${i}"
+    h+=`<div class="cont-row" draggable="true" data-oid="${o.id}" data-idx="${i}" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}"
       ondragstart="dragStart(event,'${o.id}',${i})"
       ondragover="contDragOver(event)"
       ondragleave="contDragLeave(event)"
@@ -1246,16 +1261,12 @@ function contPanel(o){
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setCont')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
-      <div class="cont-field-group">
-        <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)">
-      </div>
+      <div class="cont-field-group"><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setCont('${o.id}',${i},'containerNumber',this.value)"></div>
       <div class="cont-field-group">
         <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setCont('${o.id}',${i},'klient',this.value)">
         <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="Nr faktury…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setCont('${o.id}',${i},'faktura',this.value)">
       </div>
-      <div>
-        <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
-      </div>
+      <div><textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setCont('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
     </div>`;
   });
   h+=`</div>`;
@@ -1537,27 +1548,25 @@ function delDateToggleExp(oid,dateKey){
 
 function contPanelSlots(o,slots){
   const cap=getCap(o.power||parsePower(o.desc)),n=getCCount(o);
+  const widths=getColWidths(o.id)||defaultColWidths();
+  const tmpl=colTemplate(widths);
   let h=bulkBarHtml(o.id, n);
-  h+=`<div class="cpanel-hdr"><span></span><span>Kontener</span><span style="text-align:right">Ilość</span><span>Data dostawy</span><span>Status</span><span>Nr kontenera</span><span>Klient / Nr faktury</span><span>Notatka</span></div>`;
+  h+=`<div class="cpanel-hdr" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}">${renderColHeaders(o.id)}</div>`;
   slots.forEach(s=>{
     const i=s.contIdx,c=o.containers[i],cq=s.qty,part=i===n-1&&cq<cap;
     const cDate=c.deliveryDate||o.deliveryDate||'';
-    h+=`<div class="cont-row">
+    h+=`<div class="cont-row" data-col-oid="${o.id}" style="grid-template-columns:${tmpl}">
       <div></div>
       <div class="cont-num"><span class="cbadge${part?' part':''}">${i+1}</span>Kont. ${i+1}/${n}</div>
       <div class="cont-qty-cell">${fmt(cq,0)}</div>
       <div>${stockPickerHtml(o.id,i,cDate,'setContDel')}</div>
       <div>${stToggle(o.id,i,c.status)}</div>
-      <div class="cont-field-group">
-        <input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)">
-      </div>
+      <div class="cont-field-group"><input class="cont-number-input" value="${(c.containerNumber||'').replace(/"/g,'&quot;')}" placeholder="np. TCKU1234567" oninput="setContDebounced('${o.id}',${i},'containerNumber',this.value)" onchange="setContDel('${o.id}',${i},'containerNumber',this.value)"></div>
       <div class="cont-field-group">
         <input class="cont-field-input" value="${(c.klient||'').replace(/"/g,'&quot;')}" placeholder="Nazwa klienta…" oninput="setContDebounced('${o.id}',${i},'klient',this.value)" onchange="setContDel('${o.id}',${i},'klient',this.value)">
         <input class="cont-field-input" value="${(c.faktura||'').replace(/"/g,'&quot;')}" placeholder="Nr faktury…" oninput="setContDebounced('${o.id}',${i},'faktura',this.value)" onchange="setContDel('${o.id}',${i},'faktura',this.value)">
       </div>
-      <div>
-        <textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea>
-      </div>
+      <div><textarea class="cont-notes-large" placeholder="Uwagi, rezerwacja…" oninput="setContDebounced('${o.id}',${i},'notes',this.value)" onchange="setContDel('${o.id}',${i},'notes',this.value)">${(c.notes||'').replace(/</g,'&lt;')}</textarea></div>
     </div>`;
   });
   return h;
