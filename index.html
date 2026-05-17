@@ -602,6 +602,19 @@ tr.cpanel-row td{padding:0;border-bottom:1px solid var(--border2)}
 @keyframes syncpulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* ══════════════════════════════════════════════════
+   INLINE EDIT
+══════════════════════════════════════════════════ */
+.td-editable{cursor:pointer;border-radius:4px;transition:background .15s;position:relative;}
+.td-editable:hover{background:var(--gold2);outline:1px dashed var(--gold3);}
+.td-editable:hover::after{content:'✏️';position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:9px;opacity:.5;}
+.td-inline-input{
+  border:1.5px solid var(--gold);border-radius:6px;padding:3px 7px;
+  font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;
+  background:var(--paper);outline:none;width:100%;min-width:50px;
+  box-shadow:0 0 0 3px var(--gold2);
+}
+
+/* ══════════════════════════════════════════════════
    TOAST
 ══════════════════════════════════════════════════ */
 .toast{
@@ -1366,10 +1379,10 @@ function renderTable(){
     const zCol=`<div class="ztoggle"><button onclick="setZaliczka('${o.id}','tak')" class="${zal?'atak':''}">TAK</button><button onclick="setZaliczka('${o.id}','nie')" class="${!zal?'anie':''}">NIE</button></div>`;
     html+=`<tr class="mrow${isExp?' expanded':''}">
       <td>${xBtn}</td>
-      <td class="td-producer">${o.producent||'—'}</td>
+      <td class="td-producer td-editable" onclick="inlineEdit('${o.id}','producent','${(o.producent||'').replace(/'/g,"\\'")}','text',this)">${o.producent||'—'}</td>
       <td class="td-nlm">${o.nlm}</td>
-      <td><div class="td-model">${o.model}</div><div class="td-desc">${o.desc||''}</div></td>
-      <td class="td-power">${o.power?o.power+'W':'—'}</td>
+      <td onclick="inlineEdit('${o.id}','model','${(o.model||'').replace(/'/g,"\\'")}','text',this)" style="cursor:pointer"><div class="td-model td-editable">${o.model}</div><div class="td-desc">${o.desc||''}</div></td>
+      <td class="td-power td-editable" onclick="inlineEdit('${o.id}','power',${o.power||0},'number',this)">${o.power?o.power+'W':'—'}</td>
       <td><select class="td-select" onchange="setOrderField('${o.id}','typ',this.value)">
         <option value="">—</option>
         <option${o.typ==='Bifacial'?' selected':''}>Bifacial</option>
@@ -1382,15 +1395,15 @@ function renderTable(){
         <option${o.rama==='Full Black'?' selected':''}>Full Black</option>
         <option${o.rama==='Srebrna'?' selected':''}>Srebrna</option>
       </select></td>
-      <td class="td-num" style="font-weight:600">${fmt(o.qty,0)}</td>
+      <td class="td-num td-editable" style="font-weight:600" onclick="inlineEdit('${o.id}','qty',${o.qty},'number',this)">${fmt(o.qty,0)}</td>
       <td>${cCol}</td>
-      <td class="td-num price-col">${fmt(o.priceW,3)}</td>
+      <td class="td-num price-col td-editable" onclick="inlineEdit('${o.id}','priceW',${o.priceW},'number',this)">${fmt(o.priceW,3)}</td>
       <td style="white-space:nowrap">${getOrderDeliveryLabel(o)}<div style="font-size:9px;color:var(--ink4);margin-top:2px;font-family:'Inter',sans-serif">${o.incoterms}</div></td>
       <td><span class="port-badge ${portCls(o.port)}">${portLabel(o.port)}</span></td>
       <td>${sCl}</td>
       <td>${zCol}</td>
       <td class="td-act">
-        <button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button class="ibtn" onclick="openModal('${o.id}')" title="Edytuj wszystko"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9L8.5 1.5a1.5 1.5 0 012.1 2.1L3 11H1V9z" stroke="currentColor" stroke-width="1.2"/></svg></button>
         <button class="ibtn" onclick="archiveOrder('${o.id}')" title="Archiwizuj" style="color:var(--ink4)"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="1" y="4" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M1 4l1-3h8l1 3M5 7h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
         <button class="ibtn del" onclick="confirmDel('${o.id}')" title="Usuń"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3h8M5 3V2h2v1M4 5l.5 4h3L8 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></button>
       </td>
@@ -1802,6 +1815,47 @@ function unrealizeAll(oid){
   syncContainers(o);
   o.containers.forEach(c=>{if(c.status==='zrealizowane')c.status='wolne';});
   saveData();renderAll();toast('↩️ Cofnięto realizację kontenerów');
+}
+
+/* ════ INLINE EDIT ════ */
+function inlineEdit(oid, field, currentVal, type, el){
+  if(!window.isAdmin){toast('🔒 Tylko administrator może edytować dane');return;}
+  const orig=el.innerHTML;
+  const input=document.createElement('input');
+  input.className='td-inline-input';
+  input.type=type==='number'?'number':'text';
+  if(type==='number')input.step='any';
+  input.value=String(currentVal||'').replace(/\s/g,'').replace(',','.');
+  el.innerHTML='';
+  el.appendChild(input);
+  input.focus();input.select();
+
+  function save(){
+    const o=orders.find(x=>x.id===oid);
+    if(!o){el.innerHTML=orig;return;}
+    const raw=input.value.trim();
+    if(raw===''){el.innerHTML=orig;return;}
+    pushUndo();
+    o[field]=type==='number'?parseFloat(raw)||0:raw;
+    // Przelicz wartość jeśli zmieniono qty, priceW lub power
+    if(['qty','priceW','power'].includes(field)&&o.qty&&o.priceW&&o.power){
+      o.amount=parseFloat((o.qty*o.priceW*o.power).toFixed(2));
+    }
+    // Przelicz kontenery po zmianie qty lub power
+    if(['qty','power'].includes(field)){
+      o.containers=null;
+      syncContainers(o);
+    }
+    saveData();
+    renderAll();
+    toast('✓ Zapisano');
+  }
+
+  input.addEventListener('blur',save);
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();input.blur();}
+    if(e.key==='Escape'){e.preventDefault();el.innerHTML=orig;input.removeEventListener('blur',save);}
+  });
 }
 
 function toggleExp(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);renderTable();}
